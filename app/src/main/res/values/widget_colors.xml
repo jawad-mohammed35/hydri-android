@@ -1,0 +1,24 @@
+<resources>
+  <color name="widget_primary_light">#1D65C0</color>
+  <color name="widget_primary_dark">#5B9CEF</color>
+  <color name="widget_primary_follow">@color/widget_primary_light</color>
+  <color name="widget_surface_light">#FCFEFF</color>
+  <color name="widget_surface_dark">#182330</color>
+  <color name="widget_surface_follow">@color/widget_surface_light</color>
+  <color name="widget_on_surface_light">#182D43</color>
+  <color name="widget_on_surface_dark">#E9F1FA</color>
+  <color name="widget_on_surface_follow">@color/widget_on_surface_light</color>
+  <color name="widget_on_surface_variant_light">#49454F</color>
+  <color name="widget_on_surface_variant_dark">#CAC4D0</color>
+  <color name="widget_on_surface_variant_follow">@color/widget_on_surface_variant_light</color>
+  <color name="widget_surface_variant_light">#E4EEF8</color>
+  <color name="widget_surface_variant_dark">#233246</color>
+  <color name="widget_surface_variant_follow">@color/widget_surface_variant_light</color>
+  <color name="widget_primary_container_light">#E0EDFC</color>
+  <color name="widget_primary_container_dark">#0D2B52</color>
+  <color name="widget_primary_container_follow">@color/widget_primary_container_light</color>
+  <color name="widget_on_primary_container_light">#103769</color>
+  <color name="widget_on_primary_container_dark">#C8DEFA</color>
+  <color name="widget_on_primary_container_follow">@color/widget_on_primary_container_light</color>
+  <color name="widget_surface_oled_follow">@color/widget_surface_light</color>
+</resources>

@@ -30,6 +30,9 @@ data class Bottle(
 interface HydriDao {
     @Query("SELECT * FROM entries ORDER BY timestamp DESC") fun entries(): Flow<List<WaterEntry>>
 
+    @Query("SELECT * FROM entries WHERE date = :date ORDER BY timestamp DESC")
+    fun entriesOn(date: String): Flow<List<WaterEntry>>
+
     @Query("SELECT * FROM bottles ORDER BY position, name") fun bottles(): Flow<List<Bottle>>
 
     @Query("SELECT * FROM goals ORDER BY date") fun goals(): Flow<List<Goal>>

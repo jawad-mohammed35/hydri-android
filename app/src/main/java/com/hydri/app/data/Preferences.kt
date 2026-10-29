@@ -32,6 +32,7 @@ data class Settings(
     val evening: Boolean = false,
     val sound: Boolean = true,
     val vibration: Boolean = true,
+    val dynamicColors: Boolean = false,
 ) {
     fun json(): JSONObject =
         JSONObject().apply {
@@ -58,6 +59,7 @@ data class Settings(
             put("evening", evening)
             put("sound", sound)
             put("vibration", vibration)
+            put("dynamicColors", dynamicColors)
         }
 
     companion object {
@@ -90,6 +92,7 @@ data class Settings(
                     j.optBoolean("evening"),
                     j.optBoolean("sound", true),
                     j.optBoolean("vibration", true),
+                    j.optBoolean("dynamicColors", false),
                 )
                 .also { s ->
                     require(

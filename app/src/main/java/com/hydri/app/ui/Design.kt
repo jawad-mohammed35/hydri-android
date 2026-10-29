@@ -49,44 +49,15 @@ val LocalReducedMotion = staticCompositionLocalOf { false }
 
 @Composable
 fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
-    val dark = s.theme == "Dark" || (s.theme == "System" && isSystemInDarkTheme())
-    val accent = accents[s.accent]
-    val scheme =
-        if (dark)
-            darkColorScheme(
-                primary = accent.copy().let { lerp(it, Color.White, .25f) },
-                onPrimary = Color(0xFF08121C),
-                primaryContainer = lerp(accent, Color.Black, .65f),
-                onPrimaryContainer = lerp(accent, Color.White, .75f),
-                secondary = lerp(accent, Color.White, .4f),
-                onSecondary = Color(0xFF08121C),
-                secondaryContainer = lerp(accent, Color.Black, .65f),
-                onSecondaryContainer = lerp(accent, Color.White, .75f),
-                background = if (s.oled) Color.Black else Color(0xFF0D1520),
-                surface = if (s.oled) Color(0xFF080A0E) else Color(0xFF182330),
-                surfaceVariant = Color(0xFF233246),
-                surfaceContainerHighest = Color(0xFF233246),
-                onSurface = Color(0xFFE9F1FA),
-                onBackground = Color(0xFFE9F1FA),
-            )
-        else
-            lightColorScheme(
-                primary = lerp(accent, Color.Black, .18f),
-                onPrimary = Color.White,
-                primaryContainer = lerp(accent, Color.White, .86f),
-                onPrimaryContainer = lerp(accent, Color.Black, .55f),
-                secondary = lerp(accent, Color.Black, .25f),
-                onSecondary = Color.White,
-                secondaryContainer = lerp(accent, Color.White, .86f),
-                onSecondaryContainer = lerp(accent, Color.Black, .55f),
-                background = Color(0xFFF2F7FC),
-                surface = Color(0xFFFCFEFF),
-                surfaceVariant = Color(0xFFE4EEF8),
-                surfaceContainerHighest = Color(0xFFE4EEF8),
-                onSurface = Color(0xFF182D43),
-                onBackground = Color(0xFF182D43),
-            )
     val context = LocalContext.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val dark =
+        usesDarkTheme(
+            s,
+            configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                android.content.res.Configuration.UI_MODE_NIGHT_YES,
+        )
+    val scheme = hydriColors(context, s)
     SideEffect {
         (context as? android.app.Activity)?.let { activity ->
             WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
@@ -165,8 +136,8 @@ fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
 }
 
 @Composable
-fun ScreenColumn(content: @Composable ColumnScope.() -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = 760.dp)
                 .fillMaxWidth()

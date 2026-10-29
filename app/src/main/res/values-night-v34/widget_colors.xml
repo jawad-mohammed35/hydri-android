@@ -1,0 +1,24 @@
+<resources>
+  <color name="widget_primary_light">@android:color/system_primary_light</color>
+  <color name="widget_primary_dark">@android:color/system_primary_dark</color>
+  <color name="widget_primary_follow">@color/widget_primary_dark</color>
+  <color name="widget_surface_light">@android:color/system_surface_light</color>
+  <color name="widget_surface_dark">@android:color/system_surface_dark</color>
+  <color name="widget_surface_follow">@color/widget_surface_dark</color>
+  <color name="widget_on_surface_light">@android:color/system_on_surface_light</color>
+  <color name="widget_on_surface_dark">@android:color/system_on_surface_dark</color>
+  <color name="widget_on_surface_follow">@color/widget_on_surface_dark</color>
+  <color name="widget_on_surface_variant_light">@android:color/system_on_surface_variant_light</color>
+  <color name="widget_on_surface_variant_dark">@android:color/system_on_surface_variant_dark</color>
+  <color name="widget_on_surface_variant_follow">@color/widget_on_surface_variant_dark</color>
+  <color name="widget_surface_variant_light">@android:color/system_surface_variant_light</color>
+  <color name="widget_surface_variant_dark">@android:color/system_surface_variant_dark</color>
+  <color name="widget_surface_variant_follow">@color/widget_surface_variant_dark</color>
+  <color name="widget_primary_container_light">@android:color/system_primary_container_light</color>
+  <color name="widget_primary_container_dark">@android:color/system_primary_container_dark</color>
+  <color name="widget_primary_container_follow">@color/widget_primary_container_dark</color>
+  <color name="widget_on_primary_container_light">@android:color/system_on_primary_container_light</color>
+  <color name="widget_on_primary_container_dark">@android:color/system_on_primary_container_dark</color>
+  <color name="widget_on_primary_container_follow">@color/widget_on_primary_container_dark</color>
+  <color name="widget_surface_oled_follow">#000000</color>
+</resources>

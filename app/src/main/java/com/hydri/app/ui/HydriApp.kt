@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -16,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.*
@@ -95,94 +95,51 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                     containerColor = Color.Transparent,
                     snackbarHost = { SnackbarHost(snackbar, Modifier.testTag("snackbar")) },
                     bottomBar = {
-                        if (route in setOf("Home", "Bottles", "Tracker", "More"))
-                            Surface(
-                                Modifier.navigationBarsPadding()
-                                    .padding(horizontal = 24.dp, vertical = 10.dp)
-                                    .fillMaxWidth()
-                                    .widthIn(max = 640.dp),
-                                shape = RoundedCornerShape(32.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = .92f),
-                                tonalElevation = 3.dp,
-                                border =
-                                    BorderStroke(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .12f),
-                                    ),
-                            ) {
-                                Row(
-                                    Modifier.padding(6.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                ) {
-                                    val tabs =
-                                        listOf(
-                                            "Home" to Icons.Outlined.Home,
-                                            "Bottles" to Icons.Outlined.WaterDrop,
-                                            "Tracker" to Icons.Outlined.CalendarMonth,
-                                            "More" to Icons.Outlined.GridView,
-                                        )
-                                    tabs.forEach { (name, icon) ->
-                                        val selected = route == name
-                                        val color by
-                                            animateColorAsState(
-                                                if (selected)
-                                                    MaterialTheme.colorScheme.primary.copy(
-                                                        alpha = .12f
-                                                    )
-                                                else Color.Transparent,
-                                                animationSpec =
-                                                    tween(
-                                                        if (LocalReducedMotion.current) 0 else 180
-                                                    ),
-                                                label = "Selected tab",
-                                            )
-                                        Column(
-                                            Modifier.weight(1f)
-                                                .clip(RoundedCornerShape(26.dp))
-                                                .background(color)
-                                                .selectableTab(selected, name) {
-                                                    if (state.settings.haptics)
-                                                        haptic.performHapticFeedback(
-                                                            HapticFeedbackType.TextHandleMove
-                                                        )
-                                                    nav.navigate(name) {
-                                                        popUpTo(nav.graph.startDestinationId) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                                .padding(vertical = 10.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                        ) {
-                                            Icon(
-                                                icon,
-                                                null,
-                                                tint =
-                                                    if (selected) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                            Text(
-                                                name,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color =
-                                                    if (selected) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    }
+                        if (route in primaryTabs)
+                            SlidingNavigation(route, state.settings.haptics) { name ->
+                                nav.navigate(name) {
+                                    popUpTo(nav.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
                             }
                     },
                 ) { padding ->
-                    val transitionDuration = if (LocalReducedMotion.current) 0 else 180
+                    val reduced = LocalReducedMotion.current
+                    val secondary =
+                        setOf("Notifications", "Hydration Guide", "Data & Backup", "About")
                     NavHost(
                         nav,
                         "Home",
                         Modifier.padding(padding),
-                        enterTransition = { fadeIn(tween(transitionDuration)) },
-                        exitTransition = { fadeOut(tween(transitionDuration)) },
+                        enterTransition = {
+                            if (reduced) EnterTransition.None
+                            else if (targetState.destination.route in secondary)
+                                slideInHorizontally(spring(dampingRatio = .88f, stiffness = 550f)) {
+                                    it
+                                } + fadeIn(tween(140))
+                            else fadeIn(tween(160))
+                        },
+                        exitTransition = {
+                            if (reduced) ExitTransition.None
+                            else if (targetState.destination.route in secondary)
+                                slideOutHorizontally(tween(230)) { -it / 5 } + fadeOut(tween(150))
+                            else fadeOut(tween(160))
+                        },
+                        popEnterTransition = {
+                            if (reduced) EnterTransition.None
+                            else if (initialState.destination.route in secondary)
+                                slideInHorizontally(tween(230)) { -it / 5 } + fadeIn(tween(170))
+                            else fadeIn(tween(160))
+                        },
+                        popExitTransition = {
+                            if (reduced) ExitTransition.None
+                            else if (initialState.destination.route in secondary)
+                                slideOutHorizontally(spring(dampingRatio = .9f, stiffness = 600f)) {
+                                    it
+                                } + fadeOut(tween(180))
+                            else fadeOut(tween(160))
+                        },
                     ) {
                         composable("Home") {
                             HomeScreen(

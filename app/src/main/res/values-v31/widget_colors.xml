@@ -1,0 +1,24 @@
+<resources>
+  <color name="widget_primary_light">@android:color/system_accent1_600</color>
+  <color name="widget_primary_dark">@android:color/system_accent1_200</color>
+  <color name="widget_primary_follow">@color/widget_primary_light</color>
+  <color name="widget_surface_light">@android:color/system_neutral1_10</color>
+  <color name="widget_surface_dark">@android:color/system_neutral1_900</color>
+  <color name="widget_surface_follow">@color/widget_surface_light</color>
+  <color name="widget_on_surface_light">@android:color/system_neutral1_900</color>
+  <color name="widget_on_surface_dark">@android:color/system_neutral1_100</color>
+  <color name="widget_on_surface_follow">@color/widget_on_surface_light</color>
+  <color name="widget_on_surface_variant_light">@android:color/system_neutral2_700</color>
+  <color name="widget_on_surface_variant_dark">@android:color/system_neutral2_200</color>
+  <color name="widget_on_surface_variant_follow">@color/widget_on_surface_variant_light</color>
+  <color name="widget_surface_variant_light">@android:color/system_neutral2_100</color>
+  <color name="widget_surface_variant_dark">@android:color/system_neutral2_700</color>
+  <color name="widget_surface_variant_follow">@color/widget_surface_variant_light</color>
+  <color name="widget_primary_container_light">@android:color/system_accent1_100</color>
+  <color name="widget_primary_container_dark">@android:color/system_accent1_700</color>
+  <color name="widget_primary_container_follow">@color/widget_primary_container_light</color>
+  <color name="widget_on_primary_container_light">@android:color/system_accent1_900</color>
+  <color name="widget_on_primary_container_dark">@android:color/system_accent1_100</color>
+  <color name="widget_on_primary_container_follow">@color/widget_on_primary_container_light</color>
+  <color name="widget_surface_oled_follow">@color/widget_surface_light</color>
+</resources>

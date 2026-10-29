@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hydri.app.BuildConfig
@@ -121,7 +122,7 @@ fun MoreScreen(
                 }
             }
         }
-    ScreenColumn {
+    ScreenColumn(Modifier.testTag("settings-page-$page")) {
         if (page == "More") {
             PageHeader("More")
             GlassCard(Modifier.fillMaxWidth()) {
@@ -156,10 +157,16 @@ fun MoreScreen(
                     save(s.copy(oled = it))
                 }
                 Text(
-                    "Accent color · ${accentNames[s.accent]}",
+                    if (s.dynamicColors) "Accent · Match Device Colors"
+                    else "Accent color · ${accentNames[s.accent]}",
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                AccentPicker(s.accent) { save(s.copy(accent = it)) }
+                AccentPicker(if (s.dynamicColors) -1 else s.accent) {
+                    save(s.copy(accent = it, dynamicColors = false))
+                }
+                Choice("Match Device Colors", s.dynamicColors) {
+                    save(s.copy(dynamicColors = true))
+                }
                 SettingToggle("Reduce animations", value = s.reducedMotion) {
                     save(s.copy(reducedMotion = it))
                 }
@@ -323,63 +330,7 @@ fun MoreScreen(
                     }
                 }
                 "Hydration Guide" -> {
-                    GlassCard(Modifier.fillMaxWidth()) {
-                        Eyebrow("HYDRATION REFERENCE")
-                        Text("Daily total water", style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            "Total water includes drinking water, other beverages and moisture in food. These are adequate intake reference values, not drinking-water-only goals or personalized medical advice."
-                        )
-                        listOf(
-                                Triple("Age group", "Male", "Female"),
-                                Triple("1–3 years", "1.3 L", "1.3 L"),
-                                Triple("4–8 years", "1.7 L", "1.7 L"),
-                                Triple("9–13 years", "2.4 L", "2.1 L"),
-                                Triple("14–18 years", "3.3 L", "2.3 L"),
-                                Triple("19+ years", "3.7 L", "2.7 L"),
-                            )
-                            .forEach { (age, male, female) ->
-                                Row(Modifier.fillMaxWidth()) {
-                                    Text(
-                                        age,
-                                        Modifier.weight(1.4f),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                    Text(
-                                        male,
-                                        Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                    Text(
-                                        female,
-                                        Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                            }
-                        Text(
-                            "Needs vary with activity, climate, health conditions and individual circumstances. Follow clinician guidance if you have a fluid restriction. Hydri never sets goals from age or gender.",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                        Text(
-                            "Source: Institute of Medicine (2005), Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate. doi:10.17226/10925, chapter 4 and summary tables.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        TextButton(
-                            onClick = {
-                                context.startActivity(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        android.net.Uri.parse(
-                                            "https://www.nationalacademies.org/read/10925/chapter/6"
-                                        ),
-                                    )
-                                )
-                            }
-                        ) {
-                            Text("Read the source (browser)")
-                        }
-                    }
+                    HydrationGuide(s.unit)
                 }
                 "Data & Backup" -> {
                     GlassCard(Modifier.fillMaxWidth()) {

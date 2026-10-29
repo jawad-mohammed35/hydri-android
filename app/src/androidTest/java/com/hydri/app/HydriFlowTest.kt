@@ -199,7 +199,7 @@ class HydriFlowTest {
             rule.onNodeWithContentDescription("Back to More").performClick()
             rule.waitForIdle()
         }
-        text("Version 1.1.0 (2)").performScrollTo().assertIsDisplayed()
+        text("Version 1.2.0 (3)").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -220,19 +220,34 @@ class HydriFlowTest {
         assertEquals(3, b.color)
         assertTrue(b.favorite)
         tab("Home")
-        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isNotEmpty()}
+        await {
+            rule
+                .onAllNodesWithContentDescription("Log QA flask, 750 mL")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").performScrollTo().assertExists()
         tab("Bottles")
         rule.onNodeWithContentDescription("Unfavorite QA flask").performScrollTo().performClick()
         await { runBlocking { !repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
-        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isEmpty()}
+        await {
+            rule
+                .onAllNodesWithContentDescription("Log QA flask, 750 mL")
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").assertDoesNotExist()
         tab("Bottles")
         rule.onNodeWithContentDescription("Favorite QA flask").performScrollTo().performClick()
         await { runBlocking { repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
-        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isNotEmpty()}
+        await {
+            rule
+                .onAllNodesWithContentDescription("Log QA flask, 750 mL")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").performScrollTo().assertExists()
         runBlocking {
             repo.dao.allBottles().forEach { repo.dao.putBottle(it.copy(favorite = false)) }
