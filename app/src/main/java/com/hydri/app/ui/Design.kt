@@ -65,6 +65,7 @@ fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
                 background = if (s.oled) Color.Black else Color(0xFF0D1520),
                 surface = if (s.oled) Color(0xFF080A0E) else Color(0xFF182330),
                 surfaceVariant = Color(0xFF233246),
+                surfaceContainerHighest = Color(0xFF233246),
                 onSurface = Color(0xFFE9F1FA),
                 onBackground = Color(0xFFE9F1FA),
             )
@@ -81,6 +82,7 @@ fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
                 background = Color(0xFFF2F7FC),
                 surface = Color(0xFFFCFEFF),
                 surfaceVariant = Color(0xFFE4EEF8),
+                surfaceContainerHighest = Color(0xFFE4EEF8),
                 onSurface = Color(0xFF182D43),
                 onBackground = Color(0xFF182D43),
             )
@@ -189,11 +191,11 @@ fun Eyebrow(text: String) {
 }
 
 @Composable
-fun PageHeader(title: String, subtitle: String) {
+fun PageHeader(title: String, subtitle: String = "") {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Eyebrow("HYDRI / A LITTLE EVERY DAY")
         Text(title, style = MaterialTheme.typography.headlineLarge)
-        Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (subtitle.isNotBlank())
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -363,22 +365,62 @@ fun <T> SettingMenu(
     onChange: (T) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box {
-        TextButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
-            Text(label(value))
-            Icon(Icons.Outlined.ExpandMore, null)
-        }
-        DropdownMenu(expanded, { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(label(option)) },
-                    onClick = {
-                        expanded = false
-                        onChange(option)
-                    },
-                )
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(title, modifier = Modifier.weight(1f))
+        Box {
+            OutlinedButton(
+                onClick = { expanded = !expanded },
+                shape = RoundedCornerShape(16.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                modifier = Modifier.semantics { contentDescription = "$title: ${label(value)}" },
+            ) {
+                Text(label(value))
+                Icon(Icons.Outlined.ExpandMore, null)
+            }
+            DropdownMenu(
+                expanded,
+                { expanded = false },
+                modifier = Modifier.widthIn(min = 152.dp, max = 280.dp),
+                shape = RoundedCornerShape(22.dp),
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .97f),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .16f)),
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(label(option)) },
+                        onClick = {
+                            expanded = false
+                            onChange(option)
+                        },
+                        trailingIcon = { if (option == value) Icon(Icons.Outlined.Check, null) },
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+fun SettingsLink(title: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp)
+            .semantics(mergeDescendants = true) {
+                role = androidx.compose.ui.semantics.Role.Button
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Symbol(icon, size = 40)
+        Text(title, Modifier.weight(1f))
+        Icon(Icons.Outlined.ChevronRight, null)
     }
 }

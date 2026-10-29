@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -22,159 +21,6 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun HomeScreen(
-    state: UiState,
-    onLog: (Bottle) -> Unit,
-    onCustom: () -> Unit,
-    onEntry: (WaterEntry) -> Unit,
-    onGoal: () -> Unit,
-    onBottles: () -> Unit,
-) {
-    val s = state.settings
-    val total = state.total(state.today)
-    val goal = state.goal(state.today)
-    ScreenColumn {
-        val greeting =
-            when (state.hour) {
-                in 5..11 -> "Good morning"
-                in 12..16 -> "Good afternoon"
-                in 17..21 -> "Good evening"
-                else -> "Good night"
-            }
-        PageHeader(
-            "$greeting${if(s.name.isBlank()) "" else ", ${s.name}"}",
-            "Make a little room for a little water.",
-        )
-        GlassCard(Modifier.fillMaxWidth()) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Eyebrow("YOUR DAILY FLOW")
-                TextButton(onClick = onGoal) {
-                    Text("Edit goal", style = MaterialTheme.typography.labelMedium)
-                }
-            }
-            WaterProgress(total, goal, s.unit, compact = true)
-            Text(
-                when {
-                    total > goal ->
-                        "Goal reached · ${Volume.format(total-goal,s.unit)} above your goal"
-                    total == goal -> "Your daily goal is complete. Nicely done."
-                    else -> "${Volume.format(goal-total,s.unit)} left to your daily goal"
-                },
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Column {
-            SectionTitle("A sip, a tap.", "Manage", onBottles)
-            Text(
-                "Tap a bottle to log water",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(12.dp))
-            if (state.bottles.isEmpty())
-                GlassCard {
-                    Text("Your next sip starts here. Create a bottle or log a custom amount.")
-                }
-            state.bottles.chunked(2).forEach { row ->
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    row.forEach { b ->
-                        GlassCard(
-                            Modifier.weight(1f)
-                                .clickable { onLog(b) }
-                                .semantics(mergeDescendants = true) {
-                                    role = Role.Button
-                                    contentDescription =
-                                        "Log ${b.name}, ${Volume.format(b.volume,s.unit)}"
-                                }
-                        ) {
-                            Symbol(bottleIcons[b.icon], color = accents[b.color])
-                            Text(b.name, fontWeight = FontWeight.Medium)
-                            Text(
-                                "+ ${Volume.format(b.volume,s.unit)}",
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-                    }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-            OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(50.dp)) {
-                Icon(Icons.Outlined.Add, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Custom amount")
-            }
-        }
-        Column {
-            SectionTitle("Today's sips")
-            EntryList(state.entriesOn(state.today), s, onEntry)
-        }
-        Text(
-            "One day at a time. Your history stays safely on this device.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-fun EntryList(entries: List<WaterEntry>, s: Settings, onEntry: (WaterEntry) -> Unit) {
-    val system24 = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
-    if (entries.isEmpty())
-        GlassCard(Modifier.fillMaxWidth()) {
-            Icon(Icons.Outlined.WaterDrop, null, tint = MaterialTheme.colorScheme.primary)
-            Text("A fresh start", fontWeight = FontWeight.SemiBold)
-            Text(
-                "No water logged for this day yet.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    else
-        GlassCard(Modifier.fillMaxWidth()) {
-            entries.forEachIndexed { i, e ->
-                Row(
-                    Modifier.fillMaxWidth()
-                        .clickable { onEntry(e) }
-                        .padding(vertical = 6.dp)
-                        .semantics(mergeDescendants = true) { role = Role.Button },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Symbol(Icons.Outlined.WaterDrop, size = 40)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(e.name, fontWeight = FontWeight.Medium)
-                        Text(
-                            formattedTime(e.timestamp, s.timeFormat, system24, ZoneId.of(e.zone)) +
-                                if (e.zone != ZoneId.systemDefault().id) " · ${e.zone}" else "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Text(Volume.format(e.volume, s.unit))
-                    Icon(
-                        Icons.Outlined.ChevronRight,
-                        "Edit entry",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (i < entries.lastIndex)
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .35f)
-                    )
-            }
-        }
-}
-
-@Composable
 fun BottlesScreen(
     state: UiState,
     onEdit: (Bottle?) -> Unit,
@@ -183,7 +29,7 @@ fun BottlesScreen(
     onDelete: (Bottle) -> Unit,
 ) {
     ScreenColumn {
-        PageHeader("Your daily companions.", "Good habits come in all shapes and sizes.")
+        PageHeader("Bottles")
         Button(onClick = { onEdit(null) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
             Icon(Icons.Outlined.Add, null)
             Text("Create a bottle")
@@ -236,7 +82,7 @@ fun BottlesScreen(
             }
         }
         Text(
-            "Favorites appear in the medium home-screen widget. Reorder bottles to arrange your quick-add actions.",
+            "Favorites appear on Home and in the widget.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -244,12 +90,7 @@ fun BottlesScreen(
 }
 
 @Composable
-fun TrackerScreen(
-    state: UiState,
-    onGoal: () -> Unit,
-    onEntry: (WaterEntry) -> Unit,
-    onAdd: (LocalDate) -> Unit,
-) {
+fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDate) -> Unit) {
     var selectedText by rememberSaveable { mutableStateOf(state.today.toString()) }
     var monthText by rememberSaveable { mutableStateOf(YearMonth.from(state.today).toString()) }
     var period by rememberSaveable { mutableStateOf("Week") }
@@ -260,7 +101,7 @@ fun TrackerScreen(
     val s = state.settings
     val start = state.goals.minOfOrNull { it.date }?.let { LocalDate.parse(it) } ?: state.today
     ScreenColumn {
-        PageHeader("Every drop adds up.", "Your rhythm, reflected over time.")
+        PageHeader("Tracker")
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             GlassCard(Modifier.weight(1f)) {
                 Symbol(Icons.Outlined.LocalFireDepartment)
@@ -385,36 +226,16 @@ fun TrackerScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Column {
-            SectionTitle(formattedDate(selected, s.dateFormat), "+ Log", { onAdd(selected) })
-            val total = state.total(selected)
-            val goal = state.goal(selected)
+        GlassCard(Modifier.fillMaxWidth()) {
+            SectionTitle(formattedDate(selected, s.dateFormat), "Log water", { onAdd(selected) })
             Text(
-                "${Volume.format(total,s.unit)} / ${Volume.format(goal,s.unit)} · ${(total.toDouble()/goal*100).toInt()}%",
+                "${Volume.format(state.total(selected),s.unit)} / ${Volume.format(state.goal(selected),s.unit)}",
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                if (selected < start) "Before tracking began"
-                else if (total > goal) "Goal exceeded"
-                else if (total == goal) "Goal complete" else "Goal incomplete",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.height(12.dp))
-            EntryList(state.entriesOn(selected), s, onEntry)
         }
+        SipHistory(state, onEntry)
         GlassCard(Modifier.fillMaxWidth()) {
-            SectionTitle("Daily goal", "Change", onGoal)
-            Text(
-                Volume.format(state.goal(state.today), s.unit),
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Text(
-                "Historical goals stay with their original dates.",
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-        GlassCard(Modifier.fillMaxWidth()) {
-            SectionTitle("Your hydration trend")
+            SectionTitle("Intake")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Day", "Week", "Month").forEach {
                     Choice(it, period == it) {
@@ -500,9 +321,9 @@ fun TrackerScreen(
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SectionTitle("Little milestones")
+            SectionTitle("Badges")
             Text(
-                "Consistency earns badges. Additional water earns no extra credit. Editing history recalculates unlocks and their dates.",
+                "Badges reflect your recorded goals. Editing history can change unlocks.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -526,7 +347,8 @@ fun TrackerScreen(
                         Column(Modifier.weight(1f)) {
                             Text(badge.name, fontWeight = FontWeight.SemiBold)
                             Text(
-                                "Reach your daily goal ${badge.days} ${if(badge.days==1) "day" else "consecutive days"}.",
+                                if (badge.days == 1) "Reach your goal once."
+                                else "Reach your goal ${badge.days} days in a row.",
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Text(
@@ -544,5 +366,70 @@ fun TrackerScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SipHistory(state: UiState, onEntry: (WaterEntry) -> Unit) {
+    var expanded by rememberSaveable { mutableStateOf(listOf<String>()) }
+    val duration = if (LocalReducedMotion.current) 0 else 180
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionTitle("Sip history")
+        if (state.entries.isEmpty())
+            Text("No history yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        state.entries
+            .groupBy { it.date }
+            .toSortedMap(reverseOrder())
+            .forEach { (date, entries) ->
+                GlassCard(Modifier.fillMaxWidth()) {
+                    val open = date in expanded
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clickable { expanded = if (open) expanded - date else expanded + date }
+                            .semantics(mergeDescendants = true) {
+                                stateDescription = if (open) "Expanded" else "Collapsed"
+                                role = Role.Button
+                                contentDescription =
+                                    "History ${formattedDate(LocalDate.parse(date),state.settings.dateFormat)}"
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            formattedDate(LocalDate.parse(date), state.settings.dateFormat),
+                            Modifier.weight(1f),
+                        )
+                        Icon(
+                            if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                            null,
+                        )
+                    }
+                    androidx.compose.animation.AnimatedVisibility(
+                        open,
+                        enter =
+                            androidx.compose.animation.expandVertically(
+                                androidx.compose.animation.core.tween(duration)
+                            ) +
+                                androidx.compose.animation.fadeIn(
+                                    androidx.compose.animation.core.tween(duration)
+                                ),
+                        exit =
+                            androidx.compose.animation.shrinkVertically(
+                                androidx.compose.animation.core.tween(duration)
+                            ) +
+                                androidx.compose.animation.fadeOut(
+                                    androidx.compose.animation.core.tween(duration)
+                                ),
+                    ) {
+                        Column {
+                            Text(
+                                Volume.format(entries.sumOf { it.volume }, state.settings.unit),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            EntryList(entries, state.settings, onEntry, framed = false)
+                        }
+                    }
+                }
+            }
     }
 }

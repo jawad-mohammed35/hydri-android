@@ -49,6 +49,8 @@ interface HydriDao {
 
     @Query("DELETE FROM entries WHERE id = :id") suspend fun deleteEntry(id: String)
 
+    @Query("DELETE FROM entries WHERE date = :date") suspend fun clearEntriesOn(date: String)
+
     @Query("DELETE FROM bottles WHERE id = :id") suspend fun deleteBottle(id: String)
 
     @Query("DELETE FROM entries") suspend fun clearEntries()

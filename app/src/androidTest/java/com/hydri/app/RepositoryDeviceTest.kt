@@ -24,6 +24,14 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class RepositoryDeviceTest {
+    @Before
+    fun requireIsolatedQa() {
+        Assume.assumeTrue(
+            "Use the dedicated QA emulator",
+            InstrumentationRegistry.getArguments().getString("hydriQa") == "true",
+        )
+    }
+
     private val context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 

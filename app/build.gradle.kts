@@ -1,8 +1,23 @@
+import java.security.KeyStore
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.kapt")
+}
+tasks.matching { it.name == "validateSigningRelease" }.configureEach {
+    outputs.upToDateWhen { false }
+    doFirst {
+        val identity = android.signingConfigs.getByName("debug")
+        val keyFile = identity.storeFile
+        check(keyFile?.isFile == true) { "The existing Hydri testing key is required. No replacement key will be generated." }
+        val keyStore = KeyStore.getInstance(identity.storeType ?: KeyStore.getDefaultType())
+        keyFile!!.inputStream().use { keyStore.load(it, identity.storePassword!!.toCharArray()) }
+        val fingerprint = MessageDigest.getInstance("SHA-256").digest(keyStore.getCertificate(identity.keyAlias).encoded).joinToString("") { "%02x".format(it) }
+        check(fingerprint == "ed0e989eaa47ed777d32e9dcc9902f4462d349f5ad132bb8568971383b3ec9f0") { "Signing identity differs from the existing Hydri release. Use the original key for in-place updates." }
+    }
 }
 android {
     namespace = "com.hydri.app"
@@ -11,11 +26,18 @@ android {
         applicationId = "com.hydri.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true; buildConfig = true }
+    buildTypes {
+        getByName("release") {
+            // Preserve compatibility with the existing testing release. No new key is generated.
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+        }
+    }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }

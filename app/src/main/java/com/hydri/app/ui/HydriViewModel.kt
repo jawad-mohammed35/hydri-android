@@ -10,6 +10,8 @@ import com.hydri.app.domain.*
 import java.time.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class UiState(
     val settings: Settings = Settings(),
@@ -44,7 +46,9 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
                 UiState(s, e, b, g, t.toLocalDate(), t.hour, true)
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState())
-    val messages = MutableSharedFlow<Pair<String, WaterEntry?>>(extraBufferCapacity = 10)
+    val messages = MutableSharedFlow<Pair<String, (() -> Unit)?>>(extraBufferCapacity = 10)
+    private val actions = Mutex()
+    private val recentLogs = mutableListOf<String>()
 
     init {
         viewModelScope.launch {
@@ -58,7 +62,7 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
     fun action(block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
-                block()
+                actions.withLock { block() }
                 HydriWidgets.update(getApplication())
             } catch (e: Exception) {
                 messages.emit((e.message ?: "That action could not be completed.") to null)
@@ -74,12 +78,13 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
     fun log(
         volume: Long,
         name: String,
-        date: LocalDate = state.value.today,
+        date: LocalDate = LocalDate.now(),
         timestamp: Long = System.currentTimeMillis(),
     ) = action {
         val before = repo.dao.allEntries().filter { it.date == date.toString() }.sumOf { it.volume }
         val entry = repo.log(volume, name, date, timestamp)
-        messages.emit("Added ${Volume.format(volume,state.value.settings.unit)}" to entry)
+        recentLogs.add(entry.id)
+        messages.emit("Added ${Volume.format(volume,state.value.settings.unit)}" to { undo(entry) })
         if (
             date == LocalDate.now() &&
                 before < state.value.goal(date) &&
@@ -95,9 +100,26 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun delete(entry: WaterEntry) = action { repo.dao.deleteEntry(entry.id) }
+    fun delete(entry: WaterEntry) = action {
+        repo.dao.deleteEntry(entry.id)
+        messages.emit("Entry deleted" to { action { repo.dao.putEntry(entry) } })
+    }
 
-    fun undo(entry: WaterEntry) = delete(entry)
+    fun undo(entry: WaterEntry) = action { repo.dao.deleteEntry(entry.id) }
+
+    fun undoToday() = action {
+        val today = LocalDate.now().toString()
+        val entries = repo.dao.allEntries().filter { it.date == today }
+        val latest =
+            recentLogs.asReversed().firstNotNullOfOrNull { id -> entries.find { it.id == id } }
+                ?: entries.firstOrNull()
+        if (latest != null) {
+            repo.dao.deleteEntry(latest.id)
+            recentLogs.remove(latest.id)
+        }
+    }
+
+    fun resetToday() = action { repo.dao.clearEntriesOn(LocalDate.now().toString()) }
 
     fun goal(volume: Long) = action {
         repo.goal(volume)

@@ -3,7 +3,6 @@ package com.hydri.app.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -30,7 +29,6 @@ import androidx.navigation.compose.*
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
 import java.time.*
-import java.util.UUID
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,7 +42,7 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
     var bottleOpen by remember { mutableStateOf(false) }
     var entryEditor by remember { mutableStateOf<WaterEntry?>(null) }
     var entryOpen by remember { mutableStateOf(false) }
-    var entryDate by remember { mutableStateOf(LocalDate.now()) }
+    var entryDate by remember { mutableStateOf<LocalDate?>(null) }
     var goalOpen by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     val permission =
@@ -67,18 +65,18 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
             permission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
     LaunchedEffect(vm) {
-        vm.messages.collect { (message, entry) ->
+        vm.messages.collect { (message, undoAction) ->
             launch {
                 snackbar.currentSnackbarData?.dismiss()
                 if (
                     snackbar.showSnackbar(
                         message,
-                        if (entry != null) "Undo" else null,
+                        if (undoAction != null) "Undo" else null,
                         withDismissAction = true,
                         duration = SnackbarDuration.Short,
-                    ) == SnackbarResult.ActionPerformed && entry != null
+                    ) == SnackbarResult.ActionPerformed && undoAction != null
                 )
-                    vm.undo(entry)
+                    undoAction()
             }
         }
     }
@@ -88,89 +86,94 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            else if (!state.settings.onboarded) Onboarding(state, vm, ::requestNotifications)
+            else if (!state.settings.onboarded) Onboarding(state, vm)
             else {
                 val nav = rememberNavController()
                 val backStack by nav.currentBackStackEntryAsState()
                 val route = backStack?.destination?.route ?: "Home"
                 Scaffold(
                     containerColor = Color.Transparent,
-                    snackbarHost = { SnackbarHost(snackbar) },
+                    snackbarHost = { SnackbarHost(snackbar, Modifier.testTag("snackbar")) },
                     bottomBar = {
-                        Surface(
-                            Modifier.navigationBarsPadding()
-                                .padding(horizontal = 24.dp, vertical = 10.dp)
-                                .fillMaxWidth()
-                                .widthIn(max = 640.dp),
-                            shape = RoundedCornerShape(32.dp),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = .92f),
-                            tonalElevation = 3.dp,
-                            border =
-                                BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.primary.copy(alpha = .12f),
-                                ),
-                        ) {
-                            Row(
-                                Modifier.padding(6.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
+                        if (route in setOf("Home", "Bottles", "Tracker", "More"))
+                            Surface(
+                                Modifier.navigationBarsPadding()
+                                    .padding(horizontal = 24.dp, vertical = 10.dp)
+                                    .fillMaxWidth()
+                                    .widthIn(max = 640.dp),
+                                shape = RoundedCornerShape(32.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = .92f),
+                                tonalElevation = 3.dp,
+                                border =
+                                    BorderStroke(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .12f),
+                                    ),
                             ) {
-                                val tabs =
-                                    listOf(
-                                        "Home" to Icons.Outlined.Home,
-                                        "Bottles" to Icons.Outlined.WaterDrop,
-                                        "Tracker" to Icons.Outlined.CalendarMonth,
-                                        "More" to Icons.Outlined.GridView,
-                                    )
-                                tabs.forEach { (name, icon) ->
-                                    val selected = route == name
-                                    val color by
-                                        animateColorAsState(
-                                            if (selected)
-                                                MaterialTheme.colorScheme.primary.copy(alpha = .12f)
-                                            else Color.Transparent,
-                                            animationSpec =
-                                                tween(if (LocalReducedMotion.current) 0 else 180),
-                                            label = "Selected tab",
+                                Row(
+                                    Modifier.padding(6.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                ) {
+                                    val tabs =
+                                        listOf(
+                                            "Home" to Icons.Outlined.Home,
+                                            "Bottles" to Icons.Outlined.WaterDrop,
+                                            "Tracker" to Icons.Outlined.CalendarMonth,
+                                            "More" to Icons.Outlined.GridView,
                                         )
-                                    Column(
-                                        Modifier.weight(1f)
-                                            .clip(RoundedCornerShape(26.dp))
-                                            .background(color)
-                                            .selectableTab(selected, name) {
-                                                if (state.settings.haptics)
-                                                    haptic.performHapticFeedback(
-                                                        HapticFeedbackType.TextHandleMove
+                                    tabs.forEach { (name, icon) ->
+                                        val selected = route == name
+                                        val color by
+                                            animateColorAsState(
+                                                if (selected)
+                                                    MaterialTheme.colorScheme.primary.copy(
+                                                        alpha = .12f
                                                     )
-                                                nav.navigate(name) {
-                                                    popUpTo(nav.graph.startDestinationId) {
-                                                        saveState = true
+                                                else Color.Transparent,
+                                                animationSpec =
+                                                    tween(
+                                                        if (LocalReducedMotion.current) 0 else 180
+                                                    ),
+                                                label = "Selected tab",
+                                            )
+                                        Column(
+                                            Modifier.weight(1f)
+                                                .clip(RoundedCornerShape(26.dp))
+                                                .background(color)
+                                                .selectableTab(selected, name) {
+                                                    if (state.settings.haptics)
+                                                        haptic.performHapticFeedback(
+                                                            HapticFeedbackType.TextHandleMove
+                                                        )
+                                                    nav.navigate(name) {
+                                                        popUpTo(nav.graph.startDestinationId) {
+                                                            saveState = true
+                                                        }
+                                                        launchSingleTop = true
+                                                        restoreState = true
                                                     }
-                                                    launchSingleTop = true
-                                                    restoreState = true
                                                 }
-                                            }
-                                            .padding(vertical = 10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                    ) {
-                                        Icon(
-                                            icon,
-                                            null,
-                                            tint =
-                                                if (selected) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                        Text(
-                                            name,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color =
-                                                if (selected) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
+                                                .padding(vertical = 10.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                        ) {
+                                            Icon(
+                                                icon,
+                                                null,
+                                                tint =
+                                                    if (selected) MaterialTheme.colorScheme.primary
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                            Text(
+                                                name,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color =
+                                                    if (selected) MaterialTheme.colorScheme.primary
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
                     },
                 ) { padding ->
                     val transitionDuration = if (LocalReducedMotion.current) 0 else 180
@@ -191,14 +194,22 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                                 },
                                 onCustom = {
                                     entryEditor = null
-                                    entryDate = state.today
+                                    entryDate = null
                                     entryOpen = true
                                 },
                                 onEntry = {
                                     entryEditor = it
                                     entryOpen = true
                                 },
-                                onGoal = { goalOpen = true },
+                                onUndo = vm::undoToday,
+                                onReset = {
+                                    confirm =
+                                        "Clear all of today's sips? Other days will be kept." to
+                                            {
+                                                vm.resetToday()
+                                            }
+                                },
+                                onDelete = vm::delete,
                                 onBottles = { nav.navigate("Bottles") },
                             )
                         }
@@ -223,7 +234,6 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                         composable("Tracker") {
                             TrackerScreen(
                                 state,
-                                onGoal = { goalOpen = true },
                                 onEntry = {
                                     entryEditor = it
                                     entryOpen = true
@@ -243,8 +253,25 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                                 { goalOpen = true },
                                 { message, action -> confirm = message to action },
                                 snackbar,
+                                onNavigate = { nav.navigate(it) },
                             )
                         }
+                        listOf("Notifications", "Hydration Guide", "Data & Backup", "About")
+                            .forEach { page ->
+                                composable(page) {
+                                    MoreScreen(
+                                        state,
+                                        vm,
+                                        ::requestNotifications,
+                                        { goalOpen = true },
+                                        { message, action -> confirm = message to action },
+                                        snackbar,
+                                        page = page,
+                                        onNavigate = { nav.navigate(it) },
+                                        onBack = { nav.popBackStack() },
+                                    )
+                                }
+                            }
                     }
                 }
             }
@@ -261,7 +288,7 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
             if (entryOpen)
                 EntryDialog(
                     entryEditor,
-                    entryDate,
+                    entryDate ?: state.today,
                     state.settings,
                     { entryOpen = false },
                     onDelete = { e ->
@@ -274,8 +301,26 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                     },
                 ) { volume, date, time ->
                     val editing = entryEditor
-                    if (editing == null) vm.log(volume, "Custom water", date, time)
-                    else
+                    if (editing == null) {
+                        val targetDate = entryDate ?: LocalDate.now()
+                        val targetTime =
+                            if (targetDate == date) time
+                            else
+                                EntryTime.resolve(
+                                    targetDate,
+                                    Instant.ofEpochMilli(time)
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalTime(),
+                                    ZoneId.systemDefault(),
+                                )
+                        if (targetTime == null) {
+                            vm.action {
+                                error("The local date changed. Choose a valid time for today.")
+                            }
+                            return@EntryDialog
+                        }
+                        vm.log(volume, "Custom water", targetDate, targetTime)
+                    } else
                         vm.action {
                             if (vm.repo.dao.allGoals().none { it.date <= date.toString() })
                                 vm.repo.dao.putGoal(Goal(date.toString(), state.goal(date)))
@@ -294,7 +339,7 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                     "Daily water goal",
                     state.goal(state.today),
                     state.settings.unit,
-                    "A general starting point, not personalized medical advice. Changes apply from today; earlier goals stay the same.",
+                    "Changes apply from today. Earlier goals stay the same. General starting points are not medical advice.",
                     { goalOpen = false },
                 ) {
                     vm.goal(it)
@@ -331,179 +376,223 @@ private fun Modifier.selectableTab(selected: Boolean, name: String, onClick: () 
         .clickable(onClick = onClick)
 
 @Composable
-fun Onboarding(state: UiState, vm: HydriViewModel, requestNotifications: () -> Unit) {
+fun Onboarding(state: UiState, vm: HydriViewModel) {
     var page by rememberSaveable { mutableIntStateOf(0) }
-    var s by remember(state.settings) { mutableStateOf(state.settings) }
-    var goalText by rememberSaveable {
-        mutableStateOf(Volume.input(state.goal(state.today), s.unit))
-    }
-    var goalUnit by rememberSaveable { mutableStateOf(s.unit) }
-    var customBottle by remember { mutableStateOf(false) }
-    val titles =
-        listOf(
-            "Small sips.\nBetter days.",
-            "Make it yours.",
-            "Your way to measure.",
-            "Find your daily rhythm.",
-            "Meet your everyday bottles.",
-            "A gentle nudge.",
-            "A space that feels like you.",
-        )
-    Scaffold(
-        containerColor = Color.Transparent,
-        bottomBar = {
-            Column(Modifier.navigationBarsPadding().padding(24.dp)) {
-                Button(
-                    onClick = {
-                        if (page == 6) {
-                            vm.settings(s.copy(onboarded = true))
-                            vm.action {
-                                vm.repo.goal(Volume.parse(goalText, goalUnit) ?: 2_500_000)
-                            }
-                        } else page++
-                    },
-                    enabled = page != 3 || Volume.parse(goalText, goalUnit) != null,
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                ) {
-                    Text(
-                        if (page == 0) "Let's begin"
-                        else if (page == 6) "Start hydrating" else "Continue"
-                    )
-                }
-                if (page > 0)
-                    TextButton(onClick = { page-- }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Back")
-                    }
-            }
-        },
-    ) { padding ->
-        Column(
-            Modifier.padding(padding)
-                .statusBarsPadding()
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(28.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+    var s by
+        rememberSaveable(
+            stateSaver =
+                androidx.compose.runtime.saveable.Saver<Settings, String>(
+                    save = { it.json().toString() },
+                    restore = { Settings.from(org.json.JSONObject(it)) },
+                )
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(7) {
-                    Box(
-                        Modifier.weight(1f)
-                            .height(4.dp)
-                            .background(
-                                if (it <= page) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant,
-                                RoundedCornerShape(3.dp),
+            mutableStateOf(state.settings)
+        }
+    var selectedGoal by rememberSaveable { mutableLongStateOf(state.goal(state.today)) }
+    var custom by rememberSaveable { mutableStateOf(false) }
+    var customText by rememberSaveable { mutableStateOf(Volume.input(selectedGoal, s.unit)) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val goal = if (custom) Volume.parse(customText, s.unit) else selectedGoal
+    val titles = listOf("Hydri", "Your name", "Appearance", "Measurements", "Daily goal")
+    HydriTheme(s) {
+        Scaffold(
+            modifier = Modifier.imePadding().testTag("onboarding"),
+            containerColor = MaterialTheme.colorScheme.background,
+            bottomBar = {
+                Column(
+                    Modifier.navigationBarsPadding()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 8.dp, bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        repeat(5) { i ->
+                            Box(
+                                Modifier.weight(1f)
+                                    .height(3.dp)
+                                    .background(
+                                        if (i <= page) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceVariant,
+                                        RoundedCornerShape(3.dp),
+                                    )
                             )
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Symbol(Icons.Outlined.WaterDrop, size = 80)
-            Eyebrow("HYDRI / ${page+1} OF 7")
-            Text(titles[page], style = MaterialTheme.typography.headlineLarge)
-            when (page) {
-                0 -> {
-                    Text(
-                        "A little water, a little more often. Build a hydration habit that fits your life."
-                    )
-                    WaterProgress(750_000, 2_500_000, "mL")
-                    Text(
-                        "Private by nature. Entirely offline. Always yours.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                1 -> {
-                    Text("What should we call you? A nickname is perfect.")
-                    OutlinedTextField(
-                        s.name,
-                        { s = s.copy(name = it.take(60)) },
-                        label = { Text("Your name (optional)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                2 -> {
-                    Text("All measurements convert accurately. Change this any time.")
-                    listOf(
-                            "mL" to "Metric · millilitres",
-                            "L" to "Metric · litres",
-                            "oz" to "Imperial · US fluid ounces",
-                        )
-                        .forEach { (unit, label) ->
-                            Choice(label, s.unit == unit) {
-                                val amount = Volume.parse(goalText, goalUnit) ?: 2_500_000
-                                s = s.copy(unit = unit)
-                                goalText = Volume.input(amount, unit)
-                                goalUnit = unit
-                            }
                         }
-                }
-                3 -> {
-                    Text(
-                        "Choose a comfortable starting point. Hydration needs vary; suggested goals are not personalized medical advice."
-                    )
-                    listOf(1_500_000L, 2_000_000L, 2_500_000L).forEach { value ->
-                        Choice(
-                            Volume.format(value, s.unit),
-                            Volume.parse(goalText, goalUnit) == value,
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (page > 0)
+                            TextButton(
+                                onClick = {
+                                    keyboard?.hide()
+                                    page--
+                                }
+                            ) {
+                                Text("Back")
+                            }
+                        Button(
+                            onClick = {
+                                keyboard?.hide()
+                                if (page == 4)
+                                    vm.action {
+                                        vm.repo.goal(goal!!)
+                                        vm.repo.preferences.save(s.copy(onboarded = true))
+                                        com.hydri.app.background.Reminders.schedule(
+                                            vm.getApplication(),
+                                            s.copy(onboarded = true),
+                                        )
+                                    }
+                                else page++
+                            },
+                            enabled = page != 4 || goal != null,
+                            modifier = Modifier.weight(1f).height(48.dp),
                         ) {
-                            goalText = Volume.input(value, s.unit)
-                            goalUnit = s.unit
+                            Text(
+                                if (page == 0) "Get started"
+                                else if (page == 4) "Done" else "Continue"
+                            )
                         }
                     }
-                    VolumeField(goalText, { goalText = it }, goalUnit)
-                    Text(
-                        "Track drinking water here. Reference values for total water also include food and other beverages.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
                 }
-                4 -> {
-                    Text(
-                        "These presets are ready for one-tap logging. Tap a star to pick favorites, or add your own."
-                    )
-                    state.bottles.forEach { b ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+            },
+        ) { padding ->
+            Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                Column(
+                    Modifier.widthIn(max = 480.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Symbol(Icons.Outlined.WaterDrop, size = if (page == 0) 96 else 44)
+                    Text(titles[page], style = MaterialTheme.typography.headlineMedium)
+                    when (page) {
+                        0 -> {
                             Text(
-                                "${b.name} · ${Volume.format(b.volume,s.unit)}",
-                                Modifier.weight(1f),
+                                "Track water and set a daily goal. Everything stays on your device."
                             )
-                            IconButton(onClick = { vm.bottle(b.copy(favorite = !b.favorite)) }) {
-                                Icon(
-                                    if (b.favorite) Icons.Outlined.Star
-                                    else Icons.Outlined.StarBorder,
-                                    "Favorite ${b.name}",
+                            Text(
+                                "No account. No ads.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        1 -> {
+                            Text(
+                                "A first name or nickname is fine.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            OutlinedTextField(
+                                s.name,
+                                { s = s.copy(name = it.take(60)) },
+                                label = { Text("Name (optional)") },
+                                singleLine = true,
+                                shape = RoundedCornerShape(18.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions =
+                                    androidx.compose.foundation.text.KeyboardOptions(
+                                        capitalization =
+                                            androidx.compose.ui.text.input.KeyboardCapitalization
+                                                .Words,
+                                        imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                                    ),
+                                keyboardActions =
+                                    androidx.compose.foundation.text.KeyboardActions(
+                                        onNext = {
+                                            keyboard?.hide()
+                                            page++
+                                        }
+                                    ),
+                            )
+                        }
+                        2 -> {
+                            listOf(
+                                    "System" to "Follow system",
+                                    "Light" to "Light",
+                                    "Dark" to "Dark",
                                 )
+                                .forEach { (value, label) ->
+                                    SelectionCard(label, s.theme == value) {
+                                        s = s.copy(theme = value)
+                                    }
+                                }
+                            SettingToggle("OLED pure black", "Used with the dark theme", s.oled) {
+                                s = s.copy(oled = it)
                             }
                         }
+                        3 -> {
+                            listOf(
+                                    "mL" to "Millilitres (mL)",
+                                    "L" to "Litres (L)",
+                                    "oz" to "US fluid ounces (oz)",
+                                )
+                                .forEach { (unit, label) ->
+                                    SelectionCard(label, s.unit == unit) {
+                                        val value =
+                                            if (custom)
+                                                Volume.parse(customText, s.unit) ?: selectedGoal
+                                            else selectedGoal
+                                        s = s.copy(unit = unit)
+                                        customText = Volume.input(value, unit)
+                                    }
+                                }
+                        }
+                        4 -> {
+                            Text(
+                                "General starting points, not personalized medical advice.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            listOf(1_500_000L, 2_000_000L, 2_500_000L).forEach { value ->
+                                SelectionCard(
+                                    Volume.format(value, s.unit),
+                                    !custom && selectedGoal == value,
+                                ) {
+                                    selectedGoal = value
+                                    custom = false
+                                }
+                            }
+                            SelectionCard("Custom", custom) {
+                                custom = true
+                                customText = Volume.input(selectedGoal, s.unit)
+                            }
+                            if (custom) VolumeField(customText, { customText = it }, s.unit)
+                        }
                     }
-                    OutlinedButton(onClick = { customBottle = true }) { Text("Create a bottle") }
-                }
-                5 -> {
-                    Text(
-                        "Optional reminders work offline during your chosen hours. Android may delay delivery to save battery."
-                    )
-                    SettingToggle("Hydration reminders", "Every 2 hours, 8:00–21:00", s.reminders) {
-                        s = s.copy(reminders = it)
-                        if (it) requestNotifications()
-                    }
-                    Text("You can fine-tune days, quiet hours and frequency in More.")
-                }
-                6 -> {
-                    Text("Choose an appearance. More customization is waiting in Settings.")
-                    listOf("System", "Light", "Dark").forEach {
-                        Choice(it, s.theme == it) { s = s.copy(theme = it) }
-                    }
-                    SettingToggle("OLED pure black", value = s.oled) { s = s.copy(oled = it) }
                 }
             }
         }
     }
-    if (customBottle)
-        BottleDialog(null, s.unit, state.bottles.size, { customBottle = false }) {
-            vm.bottle(it)
-            customBottle = false
+}
+
+@Composable
+fun SelectionCard(label: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color =
+            if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .65f)
+            else MaterialTheme.colorScheme.surface.copy(alpha = .82f),
+        border =
+            BorderStroke(
+                1.dp,
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .5f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f),
+            ),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 4.dp).heightIn(min = 44.dp).semantics {
+                this.selected = selected
+                role = Role.RadioButton
+            },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, Modifier.weight(1f))
+            RadioButton(selected, onClick = null)
         }
+    }
 }
 
 @Composable
@@ -513,6 +602,7 @@ fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
         onChange,
         label = { Text("Amount ($unit)") },
         singleLine = true,
+        shape = RoundedCornerShape(18.dp),
         isError = text.isNotBlank() && Volume.parse(text, unit) == null,
         supportingText = {
             if (text.isNotBlank() && Volume.parse(text, unit) == null)
@@ -523,253 +613,6 @@ fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
             ),
         modifier = Modifier.fillMaxWidth(),
-    )
-}
-
-@Composable
-fun AmountDialog(
-    title: String,
-    initial: Long,
-    unit: String,
-    help: String,
-    onDismiss: () -> Unit,
-    onSave: (Long) -> Unit,
-) {
-    var text by remember { mutableStateOf(Volume.input(initial, unit)) }
-    var dirty by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column(
-                Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(help)
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    listOf(1_500_000L, 2_000_000L, 2_500_000L).forEach { amount ->
-                        Choice(Volume.format(amount, unit), Volume.parse(text, unit) == amount) {
-                            text = Volume.input(amount, unit)
-                            dirty = true
-                        }
-                    }
-                }
-                VolumeField(
-                    text,
-                    {
-                        text = it
-                        dirty = true
-                    },
-                    unit,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onSave(if (dirty) Volume.parse(text, unit)!! else initial) },
-                enabled = Volume.parse(text, unit) != null,
-            ) {
-                Text("Save goal")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
-}
-
-@Composable
-fun BottleDialog(
-    bottle: Bottle?,
-    unit: String,
-    position: Int,
-    onDismiss: () -> Unit,
-    onSave: (Bottle) -> Unit,
-) {
-    var name by remember { mutableStateOf(bottle?.name ?: "") }
-    var volume by remember { mutableStateOf(Volume.input(bottle?.volume ?: 500_000, unit)) }
-    var dirty by remember { mutableStateOf(false) }
-    var icon by remember { mutableIntStateOf(bottle?.icon ?: 1) }
-    var color by remember { mutableIntStateOf(bottle?.color ?: 0) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (bottle == null) "Create a bottle" else "Edit bottle") },
-        text = {
-            Column(
-                Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Symbol(bottleIcons[icon], color = accents[color], size = 72)
-                }
-                OutlinedTextField(
-                    name,
-                    { name = it.take(60) },
-                    label = { Text("Bottle name") },
-                    singleLine = true,
-                )
-                VolumeField(
-                    volume,
-                    {
-                        volume = it
-                        dirty = true
-                    },
-                    unit,
-                )
-                Text("Container")
-                Row(Modifier.horizontalScroll(rememberScrollState())) {
-                    bottleIcons.forEachIndexed { i, image ->
-                        IconButton(
-                            onClick = { icon = i },
-                            modifier =
-                                Modifier.background(
-                                    if (icon == i)
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .15f)
-                                    else Color.Transparent,
-                                    RoundedCornerShape(14.dp),
-                                ),
-                        ) {
-                            Icon(image, bottleNames[i])
-                        }
-                    }
-                }
-                Text("Color")
-                AccentPicker(color) { color = it }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onSave(
-                        Bottle(
-                            bottle?.id ?: UUID.randomUUID().toString(),
-                            name.trim(),
-                            if (!dirty && bottle != null) bottle.volume
-                            else Volume.parse(volume, unit)!!,
-                            icon,
-                            color,
-                            bottle?.favorite ?: true,
-                            bottle?.position ?: position,
-                        )
-                    )
-                },
-                enabled = name.isNotBlank() && Volume.parse(volume, unit) != null,
-            ) {
-                Text("Save bottle")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
-}
-
-@Composable
-fun EntryDialog(
-    entry: WaterEntry?,
-    defaultDate: LocalDate,
-    s: com.hydri.app.data.Settings,
-    onDismiss: () -> Unit,
-    onDelete: (WaterEntry) -> Unit,
-    onSave: (Long, LocalDate, Long) -> Unit,
-) {
-    val context = LocalContext.current
-    val zone = remember(entry) { entry?.zone?.let { ZoneId.of(it) } ?: ZoneId.systemDefault() }
-    var amount by remember { mutableStateOf(Volume.input(entry?.volume ?: 250_000, s.unit)) }
-    var dirty by remember { mutableStateOf(false) }
-    var date by remember { mutableStateOf(entry?.date?.let { LocalDate.parse(it) } ?: defaultDate) }
-    var time by remember {
-        mutableStateOf(
-            entry?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalTime() }
-                ?: LocalTime.now()
-        )
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (entry == null) "Log water" else "Edit water entry") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                VolumeField(
-                    amount,
-                    {
-                        amount = it
-                        dirty = true
-                    },
-                    s.unit,
-                )
-                OutlinedButton(
-                    onClick = {
-                        android.app
-                            .DatePickerDialog(
-                                context,
-                                { _, y, m, d -> date = LocalDate.of(y, m + 1, d) },
-                                date.year,
-                                date.monthValue - 1,
-                                date.dayOfMonth,
-                            )
-                            .apply { datePicker.maxDate = System.currentTimeMillis() }
-                            .show()
-                    }
-                ) {
-                    Icon(Icons.Outlined.CalendarMonth, null)
-                    Text(formattedDate(date, s.dateFormat))
-                }
-                OutlinedButton(
-                    onClick = {
-                        android.app
-                            .TimePickerDialog(
-                                context,
-                                { _, h, m -> time = LocalTime.of(h, m) },
-                                time.hour,
-                                time.minute,
-                                s.timeFormat == "24-hour" ||
-                                    (s.timeFormat == "System" &&
-                                        android.text.format.DateFormat.is24HourFormat(context)),
-                            )
-                            .show()
-                    }
-                ) {
-                    Icon(Icons.Outlined.Schedule, null)
-                    Text(
-                        formattedTime(
-                            time.atDate(date).atZone(zone).toInstant().toEpochMilli(),
-                            s.timeFormat,
-                            android.text.format.DateFormat.is24HourFormat(context),
-                            zone,
-                        )
-                    )
-                }
-                Text("Time zone: ${zone.id}", style = MaterialTheme.typography.bodySmall)
-                if (entry != null)
-                    TextButton(onClick = { onDelete(entry) }) {
-                        Text("Delete entry", color = MaterialTheme.colorScheme.error)
-                    }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val timestamp =
-                        if (
-                            entry != null &&
-                                date.toString() == entry.date &&
-                                time ==
-                                    Instant.ofEpochMilli(entry.timestamp).atZone(zone).toLocalTime()
-                        )
-                            entry.timestamp
-                        else date.atTime(time).atZone(zone).toInstant().toEpochMilli()
-                    onSave(
-                        if (!dirty && entry != null) entry.volume
-                        else Volume.parse(amount, s.unit)!!,
-                        date,
-                        timestamp,
-                    )
-                },
-                enabled = Volume.parse(amount, s.unit) != null && date <= LocalDate.now(),
-            ) {
-                Text("Save entry")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
