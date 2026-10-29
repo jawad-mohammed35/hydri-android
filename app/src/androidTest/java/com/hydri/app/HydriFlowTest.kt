@@ -57,6 +57,8 @@ class HydriFlowTest {
 
     private fun capture(name: String) {
         rule.waitForIdle()
+        // Android window/IME animations run outside Compose's virtual test clock.
+        Thread.sleep(350)
         val image = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         File(context.getExternalFilesDir(null), "refinement-$name.png").outputStream().use {
             image.compress(Bitmap.CompressFormat.PNG, 100, it)
@@ -216,17 +218,21 @@ class HydriFlowTest {
         assertEquals(750_000L, b.volume)
         assertEquals(5, b.icon)
         assertEquals(3, b.color)
+        assertTrue(b.favorite)
         tab("Home")
+        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isNotEmpty()}
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").performScrollTo().assertExists()
         tab("Bottles")
         rule.onNodeWithContentDescription("Unfavorite QA flask").performScrollTo().performClick()
         await { runBlocking { !repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
+        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isEmpty()}
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").assertDoesNotExist()
         tab("Bottles")
         rule.onNodeWithContentDescription("Favorite QA flask").performScrollTo().performClick()
         await { runBlocking { repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
+        await {rule.onAllNodesWithContentDescription("Log QA flask, 750 mL").fetchSemanticsNodes().isNotEmpty()}
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").performScrollTo().assertExists()
         runBlocking {
             repo.dao.allBottles().forEach { repo.dao.putBottle(it.copy(favorite = false)) }
