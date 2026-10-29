@@ -1,0 +1,27 @@
+Final release APK — Android 15, 1080x2340, 440 dpi, font 1.0
+
+com.hydri.app.UpgradeDeviceTest:.
+com.hydri.app.NavigationAndAppearanceDeviceTest:.....
+com.hydri.app.WidgetSyncDeviceTest:...
+com.hydri.app.HydriFlowTest:.....
+com.hydri.app.RepositoryDeviceTest:......
+
+Time: 52.847
+
+OK (20 tests)
+
+
+
+Small screen — 720x1280, 320 dpi, font 1.3
+
+com.hydri.app.NavigationAndAppearanceDeviceTest:.....
+com.hydri.app.HydriFlowTest:.....
+
+Time: 26.775
+
+OK (10 tests)
+
+
+
+JVM tests: EntryTimeTest 4, HydrationTest 11, NavigationAndGuideTest 4. Total 19; 0 failures.
+Debug/release builds and lint succeeded; lint 0 errors, 22 warnings each.
