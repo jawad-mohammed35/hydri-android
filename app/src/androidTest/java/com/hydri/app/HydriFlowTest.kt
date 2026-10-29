@@ -171,6 +171,7 @@ class HydriFlowTest {
         tap("Dark")
         await { runBlocking { repo.preferences.flow.first().theme == "Dark" } }
         rule.onNodeWithContentDescription("OLED pure black").performScrollTo().performClick()
+        rule.onNodeWithTag("accent-picker").performScrollTo()
         rule.onNodeWithContentDescription("Lavender").performScrollTo().performClick()
         await {
             runBlocking {
@@ -208,7 +209,9 @@ class HydriFlowTest {
         tap("Create a bottle")
         text("Bottle name").performTextInput("QA flask")
         text("Amount (mL)").performTextReplacement("750")
+        rule.onNodeWithTag("bottle-shapes").performScrollTo()
         rule.onNodeWithContentDescription("Mug").performScrollTo().performClick()
+        rule.onNodeWithTag("accent-picker").performScrollTo()
         rule.onNodeWithContentDescription("Rose").performScrollTo().performClick()
         text("Save bottle").assertIsDisplayed()
         capture("bottle-editor")

@@ -70,7 +70,9 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun settings(s: Settings) = action {
+    fun settings(change: (Settings) -> Settings) = action {
+        // Apply each control's change to the latest stored preferences, even before recomposition.
+        val s = change(repo.preferences.flow.first())
         repo.preferences.save(s)
         Reminders.schedule(getApplication(), s)
     }

@@ -80,6 +80,23 @@ class NavigationAndAppearanceDeviceTest {
     }
 
     @Test
+    fun rapidAppearanceChangesPreserveOtherPreferences() {
+        val vm = androidx.lifecycle.ViewModelProvider(rule.activity)[HydriViewModel::class.java]
+        rule.runOnUiThread {
+            vm.settings { it.copy(theme = "Dark") }
+            vm.settings { it.copy(oled = true) }
+            vm.settings { it.copy(accent = 2) }
+            vm.settings { it.copy(dynamicColors = true) }
+        }
+        await {
+            runBlocking {
+                val s = repo.preferences.flow.first()
+                s.theme == "Dark" && s.oled && s.accent == 2 && s.dynamicColors && s.unit == "mL"
+            }
+        }
+    }
+
+    @Test
     fun dragNavigatesAcrossTabsWhileFingerIsDown() {
         val bar = rule.onNodeWithTag("sliding-navigation")
         bar.performTouchInput {
@@ -192,6 +209,7 @@ class NavigationAndAppearanceDeviceTest {
         rule.onNodeWithText("2.50 L").assertExists()
         capture("guide-dynamic-units")
         rule.onNodeWithContentDescription("Back to More").performClick()
+        rule.onNodeWithTag("accent-picker").performScrollTo()
         rule.onNodeWithContentDescription("Rose").performScrollTo().performClick()
         await {
             runBlocking {

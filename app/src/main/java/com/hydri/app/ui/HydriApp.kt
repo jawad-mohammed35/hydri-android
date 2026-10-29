@@ -576,7 +576,7 @@ fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
 @Composable
 fun AccentPicker(selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        Modifier.horizontalScroll(rememberScrollState()),
+        Modifier.testTag("accent-picker").horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         accents.forEachIndexed { i, color ->

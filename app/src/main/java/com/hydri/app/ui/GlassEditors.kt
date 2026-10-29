@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -216,7 +217,7 @@ fun BottleDialog(
         )
         Text("Shape", style = MaterialTheme.typography.labelLarge)
         Row(
-            Modifier.horizontalScroll(rememberScrollState()),
+            Modifier.testTag("bottle-shapes").horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             bottleIcons.forEachIndexed { i, image ->

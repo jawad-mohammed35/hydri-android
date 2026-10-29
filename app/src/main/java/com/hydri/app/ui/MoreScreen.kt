@@ -50,7 +50,7 @@ fun MoreScreen(
     var name by remember(s.name) { mutableStateOf(s.name) }
     var info by remember { mutableStateOf<Pair<String, String>?>(null) }
     var busy by remember { mutableStateOf(false) }
-    fun save(value: Settings) {
+    fun save(value: (Settings) -> Settings) {
         vm.settings(value)
     }
     val export =
@@ -137,7 +137,7 @@ fun MoreScreen(
                         onConfirm(
                             "Reopen the setup flow? Your water history and bottles will be kept."
                         ) {
-                            save(s.copy(onboarded = false))
+                            save { latest -> latest.copy(onboarded = false) }
                         }
                     }
                 ) {
@@ -147,14 +147,14 @@ fun MoreScreen(
             GlassCard(Modifier.fillMaxWidth()) {
                 Eyebrow("APPEARANCE")
                 SettingMenu("Theme", s.theme, listOf("System", "Light", "Dark")) {
-                    save(s.copy(theme = it))
+                    save { latest -> latest.copy(theme = it) }
                 }
                 SettingToggle(
                     "OLED pure black",
                     "Applies whenever the dark theme is active",
                     s.oled,
                 ) {
-                    save(s.copy(oled = it))
+                    save { latest -> latest.copy(oled = it) }
                 }
                 Text(
                     if (s.dynamicColors) "Accent · Match Device Colors"
@@ -162,15 +162,17 @@ fun MoreScreen(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 AccentPicker(if (s.dynamicColors) -1 else s.accent) {
-                    save(s.copy(accent = it, dynamicColors = false))
+                    save { latest -> latest.copy(accent = it, dynamicColors = false) }
                 }
                 Choice("Match Device Colors", s.dynamicColors) {
-                    save(s.copy(dynamicColors = true))
+                    save { latest -> latest.copy(dynamicColors = true) }
                 }
                 SettingToggle("Reduce animations", value = s.reducedMotion) {
-                    save(s.copy(reducedMotion = it))
+                    save { latest -> latest.copy(reducedMotion = it) }
                 }
-                SettingToggle("Haptic feedback", value = s.haptics) { save(s.copy(haptics = it)) }
+                SettingToggle("Haptic feedback", value = s.haptics) {
+                    save { latest -> latest.copy(haptics = it) }
+                }
             }
             GlassCard(Modifier.fillMaxWidth()) {
                 Eyebrow("MEASUREMENTS & FORMATS")
@@ -185,17 +187,17 @@ fun MoreScreen(
                         }
                     },
                 ) {
-                    save(s.copy(unit = it))
+                    save { latest -> latest.copy(unit = it) }
                 }
                 SettingMenu(
                     "Date format",
                     s.dateFormat,
                     listOf("System", "MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"),
                 ) {
-                    save(s.copy(dateFormat = it))
+                    save { latest -> latest.copy(dateFormat = it) }
                 }
                 SettingMenu("Time format", s.timeFormat, listOf("System", "12-hour", "24-hour")) {
-                    save(s.copy(timeFormat = it))
+                    save { latest -> latest.copy(timeFormat = it) }
                 }
                 Text(
                     "Changing units changes only the display. Your original amounts stay precise.",
@@ -237,7 +239,7 @@ fun MoreScreen(
                     GlassCard(Modifier.fillMaxWidth()) {
                         Eyebrow("REMINDERS")
                         SettingToggle("Hydration reminders", value = s.reminders) {
-                            save(s.copy(reminders = it))
+                            save { latest -> latest.copy(reminders = it) }
                             if (it) requestNotifications()
                         }
                         if (s.reminders) {
@@ -247,12 +249,14 @@ fun MoreScreen(
                                 listOf(30, 60, 90, 120, 180, 240),
                                 label = { "$it min" },
                             ) {
-                                save(s.copy(frequency = it))
+                                save { latest -> latest.copy(frequency = it) }
                             }
                             TimeSetting("Active hours start", s.start, s) {
-                                save(s.copy(start = it))
+                                save { latest -> latest.copy(start = it) }
                             }
-                            TimeSetting("Active hours end", s.end, s) { save(s.copy(end = it)) }
+                            TimeSetting("Active hours end", s.end, s) {
+                                save { latest -> latest.copy(end = it) }
+                            }
                             Text("Reminder days", fontWeight = FontWeight.Medium)
                             Row(
                                 Modifier.horizontalScroll(rememberScrollState()),
@@ -267,47 +271,47 @@ fun MoreScreen(
                                             ),
                                         day in s.days,
                                     ) {
-                                        save(
-                                            s.copy(
+                                        save { latest ->
+                                            latest.copy(
                                                 days =
-                                                    if (day in s.days) s.days - day
-                                                    else s.days + day
+                                                    if (day in latest.days) latest.days - day
+                                                    else latest.days + day
                                             )
-                                        )
+                                        }
                                     }
                                 }
                             }
                             SettingToggle("Quiet hours", value = s.quiet) {
-                                save(s.copy(quiet = it))
+                                save { latest -> latest.copy(quiet = it) }
                             }
                             if (s.quiet) {
                                 TimeSetting("Quiet hours start", s.quietStart, s) {
-                                    save(s.copy(quietStart = it))
+                                    save { latest -> latest.copy(quietStart = it) }
                                 }
                                 TimeSetting("Quiet hours end", s.quietEnd, s) {
-                                    save(s.copy(quietEnd = it))
+                                    save { latest -> latest.copy(quietEnd = it) }
                                 }
                             }
                             SettingToggle("Stop after reaching goal", value = s.stopAtGoal) {
-                                save(s.copy(stopAtGoal = it))
+                                save { latest -> latest.copy(stopAtGoal = it) }
                             }
                             SettingToggle(
                                 "Evening check-in",
                                 "Around 20:00 if below goal; respects active and quiet hours",
                                 s.evening,
                             ) {
-                                save(s.copy(evening = it))
+                                save { latest -> latest.copy(evening = it) }
                             }
                         }
                         SettingToggle("Goal completion notification", value = s.goalNotification) {
-                            save(s.copy(goalNotification = it))
+                            save { latest -> latest.copy(goalNotification = it) }
                             if (it) requestNotifications()
                         }
                         SettingToggle("Notification sound", value = s.sound) {
-                            save(s.copy(sound = it))
+                            save { latest -> latest.copy(sound = it) }
                         }
                         SettingToggle("Notification vibration", value = s.vibration) {
-                            save(s.copy(vibration = it))
+                            save { latest -> latest.copy(vibration = it) }
                         }
                         TextButton(
                             onClick = {
@@ -469,7 +473,7 @@ fun MoreScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        save(s.copy(name = name.trim()))
+                        save { latest -> latest.copy(name = name.trim()) }
                         editName = false
                     }
                 ) {
