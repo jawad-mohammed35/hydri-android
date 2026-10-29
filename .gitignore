@@ -1,0 +1,17 @@
+.gradle/
+.kotlin/
+.tools/
+local.properties
+**/build/
+.idea/
+*.iml
+*.jks
+*.keystore
+captures/
+*.apk
+.env
+.env.*
+docs/build-results.txt
+docs/device-test-results.txt
+docs/unit-test-results.xml
+docs/lint-results.xml
