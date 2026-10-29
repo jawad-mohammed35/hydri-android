@@ -4,13 +4,13 @@ A native, offline water tracker built with Kotlin and Jetpack Compose. No accoun
 
 ## Try Hydri on your Android phone
 
-1. Sign into GitHub with an account that can access this private repository.
+1. Open the release page on your Android phone—no GitHub sign-in is required.
 2. Open [the Android testing release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.0.0-test.1).
 3. Expand **Assets** and download **Hydri-1.0.0-debug.apk**. Choose the APK, not the source-code archive.
 4. Open the downloaded APK. If Android prompts, allow your browser or file manager to install apps, then choose **Install**.
 5. Open **Hydri** and complete onboarding. The app works offline after installation.
 
-Requires Android 8.0 or newer. This is a debug-signed testing pre-release. The release includes `SHA256SUMS.txt` for verifying the APK. No account is needed inside Hydri; GitHub sign-in is needed only to download from this private repository.
+Requires Android 8.0 or newer. This is a debug-signed testing pre-release. The release includes `SHA256SUMS.txt` for verifying the APK. No account or GitHub sign-in is needed to download or use Hydri.
 
 ![Hydri Home](docs/home.png)
 
@@ -108,4 +108,4 @@ See `docs/VERIFICATION.md` for actual executed results, environment details, and
 
 ## Release status
 
-GitHub hosts the source and a debug-signed testing pre-release in the owner's private repository. APK binaries are attached to releases and excluded from source control. No release keystore or credentials are stored in the repository. Production signing, wider distribution, and the project's source license remain future owner decisions.
+GitHub hosts the source and a debug-signed testing pre-release in the owner's public repository. APK binaries are attached to releases and excluded from source control. No release keystore or credentials are stored in the repository. Production signing, wider distribution, and the project's source license remain future owner decisions.

@@ -1,6 +1,6 @@
 # Hydri local verification — 2026-10-27
 
-This report distinguishes executed checks from implemented features that still need wider testing. The debug APK is for the owner's evaluation. This verification was originally performed locally on 2026-10-27; the owner subsequently requested a private GitHub repository and a downloadable testing release on 2026-10-29.
+This report distinguishes executed checks from implemented features that still need wider testing. The debug APK is for the owner's evaluation. This verification was originally performed locally on 2026-10-27; the owner subsequently requested a GitHub repository and a downloadable testing release on 2026-10-29, then explicitly requested that the repository be made public.
 
 ## Environment
 
