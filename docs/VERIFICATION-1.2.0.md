@@ -50,6 +50,10 @@ The non-debuggable release reuses the original testing certificate. Its SHA-256 
 
 APK SHA-256: `e0c5a50746151a5b660f4881fe531f6ca36e02f57ac932f5d7b90e7ae32b3046`.
 
+## Published artifact
+
+[Release v1.2.0](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.0) was published in the existing public repository, preserving its history and both previous releases. [Hydri-1.2.0.apk](https://github.com/jawad-mohammed35/hydri-android/releases/download/v1.2.0/Hydri-1.2.0.apk) is 13,300,872 bytes. An anonymous download matched the checksum above and passed `apksigner verify` with the original certificate. Installing that downloaded APK with `adb install -r` succeeded; the upgrade-preservation test passed again against it. The release remains a testing pre-release because it intentionally reuses the existing testing signing identity.
+
 ## Limits
 
 Widget rendering and real PendingIntent clicks were tested through Android's native `AppWidgetHostView`, including small, tall and wide layouts. This does not establish compatibility with every manufacturer's launcher. No physical-phone test, API 26–30 runtime test, TalkBack session, subjective haptic assessment or long-duration performance benchmark was performed. Pre-Android-12 dynamic-color fallback is guarded in code and lint-checked. Reduced-motion device testing covered Hydri's setting; Android animator scale also disables Compose animation through the platform's duration scale.
