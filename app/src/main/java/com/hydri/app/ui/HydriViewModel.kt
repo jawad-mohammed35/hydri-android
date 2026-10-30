@@ -86,7 +86,6 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
         val before = repo.dao.allEntries().filter { it.date == date.toString() }.sumOf { it.volume }
         val entry = repo.log(volume, name, date, timestamp)
         recentLogs.add(entry.id)
-        messages.emit("Added ${Volume.format(volume,state.value.settings.unit)}" to { undo(entry) })
         if (
             date == LocalDate.now() &&
                 before < state.value.goal(date) &&

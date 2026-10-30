@@ -18,6 +18,7 @@ class HydriApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        LauncherShortcuts.publish(this)
         scope.launch { repository.initialize() }
     }
 

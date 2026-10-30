@@ -148,19 +148,25 @@ fun EntryList(
                         val delete by rememberUpdatedState(onDelete)
                         val dismiss = rememberSwipeToDismissBoxState()
                         LaunchedEffect(dismiss.currentValue) {
-                            if (dismiss.currentValue == SwipeToDismissBoxValue.EndToStart) delete(e)
+                            if (dismiss.currentValue != SwipeToDismissBoxValue.Settled) delete(e)
                         }
                         SwipeToDismissBox(
                             dismiss,
                             modifier = Modifier.testTag("sip-${e.id}"),
-                            enableDismissFromStartToEnd = false,
+                            enableDismissFromStartToEnd = true,
                             backgroundContent = {
                                 Row(
                                     Modifier.fillMaxSize()
                                         .clip(RoundedCornerShape(24.dp))
                                         .background(MaterialTheme.colorScheme.errorContainer)
                                         .padding(horizontal = 20.dp),
-                                    horizontalArrangement = Arrangement.End,
+                                    horizontalArrangement =
+                                        if (
+                                            dismiss.dismissDirection ==
+                                                SwipeToDismissBoxValue.StartToEnd
+                                        )
+                                            Arrangement.Start
+                                        else Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Icon(

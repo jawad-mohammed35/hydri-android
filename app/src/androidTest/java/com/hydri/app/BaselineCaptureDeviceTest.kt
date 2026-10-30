@@ -14,7 +14,7 @@ class BaselineCaptureDeviceTest {
         )
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val app = context.applicationContext as HydriApplication
-        File(context.getExternalFilesDir(null), "upgrade-1.1.0.json")
+        File(context.getExternalFilesDir(null), "upgrade-1.2.0.json")
             .writeText(app.repository.backup())
     }
 }

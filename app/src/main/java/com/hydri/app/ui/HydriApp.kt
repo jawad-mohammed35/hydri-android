@@ -26,13 +26,18 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
+import com.hydri.app.LauncherShortcuts
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
 import java.time.*
 import kotlinx.coroutines.launch
 
 @Composable
-fun HydriApp(vm: HydriViewModel = viewModel()) {
+fun HydriApp(
+    vm: HydriViewModel = viewModel(),
+    shortcut: String? = null,
+    onShortcutHandled: () -> Unit = {},
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -91,17 +96,45 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                 val nav = rememberNavController()
                 val backStack by nav.currentBackStackEntryAsState()
                 val route = backStack?.destination?.route ?: "Home"
+                fun openPrimary(name: String) {
+                    require(name in primaryTabs)
+                    nav.navigate(name) {
+                        popUpTo(nav.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        // Home is the root, never a restored stack that could contain another tab.
+                        restoreState = name != "Home"
+                    }
+                }
+                LaunchedEffect(shortcut) {
+                    if (shortcut != null) {
+                        entryOpen = false
+                        bottleOpen = false
+                        goalOpen = false
+                        confirm = null
+                        when (shortcut) {
+                            LauncherShortcuts.LOG_WATER -> {
+                                openPrimary("Home")
+                                entryEditor = null
+                                entryDate = null
+                                entryOpen = true
+                            }
+                            LauncherShortcuts.CREATE_BOTTLE -> {
+                                openPrimary("Bottles")
+                                bottleEditor = null
+                                bottleOpen = true
+                            }
+                            LauncherShortcuts.TRACKER -> openPrimary("Tracker")
+                        }
+                        onShortcutHandled()
+                    }
+                }
                 Scaffold(
                     containerColor = Color.Transparent,
                     snackbarHost = { SnackbarHost(snackbar, Modifier.testTag("snackbar")) },
                     bottomBar = {
                         if (route in primaryTabs)
                             SlidingNavigation(route, state.settings.haptics) { name ->
-                                nav.navigate(name) {
-                                    popUpTo(nav.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                openPrimary(name)
                             }
                     },
                 ) { padding ->
@@ -167,7 +200,7 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                                             }
                                 },
                                 onDelete = vm::delete,
-                                onBottles = { nav.navigate("Bottles") },
+                                onBottles = { openPrimary("Bottles") },
                             )
                         }
                         composable("Bottles") {
@@ -249,12 +282,8 @@ fun HydriApp(vm: HydriViewModel = viewModel()) {
                     state.settings,
                     { entryOpen = false },
                     onDelete = { e ->
-                        confirm =
-                            "Delete this water entry?" to
-                                {
-                                    vm.delete(e)
-                                    entryOpen = false
-                                }
+                        vm.delete(e)
+                        entryOpen = false
                     },
                 ) { volume, date, time ->
                     val editing = entryEditor

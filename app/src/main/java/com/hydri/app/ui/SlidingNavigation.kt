@@ -3,6 +3,8 @@ package com.hydri.app.ui
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,9 +116,23 @@ fun SlidingNavigation(selected: String, haptics: Boolean, onSelect: (String) -> 
                         )
                     primaryTabs.forEachIndexed { i, name ->
                         val active = name == selected
+                        val interaction = remember { MutableInteractionSource() }
+                        val focused by interaction.collectIsFocusedAsState()
                         Column(
                             Modifier.weight(1f)
-                                .selectable(active, role = Role.Tab, onClick = { choose(i) })
+                                .border(
+                                    1.5.dp,
+                                    if (focused) tint
+                                    else androidx.compose.ui.graphics.Color.Transparent,
+                                    RoundedCornerShape(26.dp),
+                                )
+                                .selectable(
+                                    active,
+                                    interactionSource = interaction,
+                                    indication = null,
+                                    role = Role.Tab,
+                                    onClick = { choose(i) },
+                                )
                                 .semantics(mergeDescendants = true) { contentDescription = name }
                                 .padding(vertical = 10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,

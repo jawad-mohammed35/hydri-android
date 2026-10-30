@@ -200,7 +200,7 @@ class HydriFlowTest {
             rule.onNodeWithContentDescription("Back to More").performClick()
             rule.waitForIdle()
         }
-        text("Version 1.2.0 (3)").performScrollTo().assertIsDisplayed()
+        text("Version 1.2.1").performScrollTo().assertIsDisplayed()
     }
 
     @Test

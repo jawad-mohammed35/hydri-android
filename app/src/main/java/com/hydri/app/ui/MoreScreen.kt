@@ -25,7 +25,8 @@ import kotlinx.coroutines.flow.first
 
 /** Replace these values when the developer elects to publish contact details. */
 object DeveloperInfo {
-    const val name = "Hydri developer"
+    const val name = "Developed by Jawad Mohammed"
+    const val linkedin = "https://www.linkedin.com/in/jawad-mohammed01"
     const val website = ""
     const val github = ""
     const val contact = ""
@@ -224,7 +225,7 @@ fun MoreScreen(
                 Symbol(Icons.Outlined.WaterDrop)
                 Text("Hydri", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                    "Version ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -406,6 +407,18 @@ fun MoreScreen(
                     GlassCard(Modifier.fillMaxWidth()) {
                         Eyebrow("ABOUT THE DEVELOPER")
                         Text(DeveloperInfo.name)
+                        TextButton(
+                            onClick = {
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        android.net.Uri.parse(DeveloperInfo.linkedin),
+                                    )
+                                )
+                            }
+                        ) {
+                            Text("LinkedIn")
+                        }
                         listOf(DeveloperInfo.website, DeveloperInfo.github, DeveloperInfo.contact)
                             .filter { it.isNotBlank() }
                             .forEach { Text(it) }
@@ -498,6 +511,7 @@ fun MoreScreen(
 fun TimeSetting(title: String, minute: Int, s: Settings, onChange: (Int) -> Unit) {
     val context = LocalContext.current
     val system24 = android.text.format.DateFormat.is24HourFormat(context)
+    var open by remember { mutableStateOf(false) }
     val label =
         com.hydri.app.domain.formattedTime(
             LocalDate.now()
@@ -508,21 +522,18 @@ fun TimeSetting(title: String, minute: Int, s: Settings, onChange: (Int) -> Unit
             s.timeFormat,
             system24,
         )
-    TextButton(
-        onClick = {
-            android.app
-                .TimePickerDialog(
-                    context,
-                    { _, h, m -> onChange(h * 60 + m) },
-                    minute / 60,
-                    minute % 60,
-                    s.timeFormat == "24-hour" || (s.timeFormat == "System" && system24),
-                )
-                .show()
-        },
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    TextButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) {
         Text(title, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
         Text(label)
     }
+    if (open)
+        GlassTimePicker(
+            title,
+            minute,
+            s.timeFormat == "24-hour" || (s.timeFormat == "System" && system24),
+            { open = false },
+        ) { value ->
+            onChange(value)
+            open = false
+        }
 }
