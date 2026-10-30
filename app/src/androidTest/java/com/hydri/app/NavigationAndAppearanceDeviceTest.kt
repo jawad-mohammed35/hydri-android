@@ -61,12 +61,12 @@ class NavigationAndAppearanceDeviceTest {
     private fun tap(s: String) {
         val n = rule.onNodeWithText(s)
         if (!n.isDisplayed()) n.performScrollTo()
-        n.performClick()
+        n.clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
     private fun more() {
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
@@ -117,7 +117,7 @@ class NavigationAndAppearanceDeviceTest {
             up()
         }
         rule.onNodeWithContentDescription("Home").assertIsSelected()
-        rule.onNodeWithContentDescription("Tracker").performClick()
+        rule.onNodeWithContentDescription("Tracker").clearFloatingNavigation(rule).performClick()
         rule.onNodeWithContentDescription("Tracker").assertIsSelected()
         capture("sliding-navigation")
     }
@@ -127,8 +127,10 @@ class NavigationAndAppearanceDeviceTest {
         more()
         val link = rule.onNodeWithText("Notifications")
         link.performScrollTo()
+        link.clearFloatingNavigation(rule)
         rule.mainClock.autoAdvance = false
         link.performClick()
+        rule.waitForIdle()
         rule.mainClock.advanceTimeBy(80)
         val early =
             rule.onNodeWithTag("settings-page-Notifications").getUnclippedBoundsInRoot().left.value
@@ -139,7 +141,10 @@ class NavigationAndAppearanceDeviceTest {
             "Incoming page must move left from the right edge: $early -> $final",
             early > final + 20,
         )
-        rule.onNodeWithContentDescription("Back to More").performClick()
+        rule
+            .onNodeWithContentDescription("Back to More")
+            .clearFloatingNavigation(rule)
+            .performClick()
         rule.mainClock.advanceTimeBy(80)
         val outgoing =
             rule.onNodeWithTag("settings-page-Notifications").getUnclippedBoundsInRoot().left.value
@@ -179,6 +184,7 @@ class NavigationAndAppearanceDeviceTest {
         }
         val link = rule.onNodeWithText("About")
         link.performScrollTo()
+        link.clearFloatingNavigation(rule)
         rule.mainClock.autoAdvance = false
         link.performClick()
         rule.mainClock.advanceTimeBy(32)
@@ -208,9 +214,16 @@ class NavigationAndAppearanceDeviceTest {
         tap("Nordic · 2023")
         rule.onNodeWithText("2.50 L").assertExists()
         capture("guide-dynamic-units")
-        rule.onNodeWithContentDescription("Back to More").performClick()
+        rule
+            .onNodeWithContentDescription("Back to More")
+            .clearFloatingNavigation(rule)
+            .performClick()
         rule.onNodeWithTag("accent-picker").performScrollTo()
-        rule.onNodeWithContentDescription("Rose").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Rose")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await {
             runBlocking {
                 !repo.preferences.flow.first().dynamicColors &&

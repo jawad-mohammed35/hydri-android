@@ -59,7 +59,7 @@ class StableRefinementDeviceTest {
     private fun tap(text: String) {
         val node = rule.onNodeWithText(text)
         if (!node.isDisplayed()) node.performScrollTo()
-        node.performClick()
+        node.clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
@@ -77,10 +77,11 @@ class StableRefinementDeviceTest {
             rule
                 .onNode(hasText("Bottles") and !hasAnyAncestor(hasTestTag("sliding-navigation")))
                 .performScrollTo()
+                .clearFloatingNavigation(rule)
                 .performClick()
             rule.onNodeWithContentDescription("Bottles").assertIsSelected()
             rule.onNodeWithText("Create a bottle").assertExists()
-            rule.onNodeWithContentDescription("Home").performClick()
+            rule.onNodeWithContentDescription("Home").clearFloatingNavigation(rule).performClick()
             rule.onNodeWithContentDescription("Home").assertIsSelected()
             rule.onNodeWithTag("daily-undo").assertExists()
         }
@@ -128,6 +129,7 @@ class StableRefinementDeviceTest {
                 "Log ${bottle.name}, ${Volume.format(bottle.volume,"mL")}"
             )
             .performScrollTo()
+            .clearFloatingNavigation(rule)
             .performClick()
         await { entries().size == count + 1 }
         rule
@@ -138,7 +140,11 @@ class StableRefinementDeviceTest {
         tap("Save entry")
         await { entries().size == count + 2 }
         rule.onNode(hasAnyAncestor(hasTestTag("snackbar")) and hasText("Undo")).assertDoesNotExist()
-        rule.onNodeWithTag("daily-undo").performScrollTo().performClick()
+        rule
+            .onNodeWithTag("daily-undo")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { entries().size == count + 1 }
         assertFalse(entries().any { it.volume == 431_000L && it.name == "Custom water" })
     }
@@ -156,7 +162,10 @@ class StableRefinementDeviceTest {
                 if (right) swipeRight(durationMillis = 400) else swipeLeft(durationMillis = 400)
             }
             await { entries().none { it.id == entry.id } }
-            rule.onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar"))).performClick()
+            rule
+                .onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar")))
+                .clearFloatingNavigation(rule)
+                .performClick()
             await { entries().any { it == entry } }
         }
     }
@@ -170,9 +179,12 @@ class StableRefinementDeviceTest {
         await { entries().none { it.id == entry.id } }
         rule.onNodeWithText("Delete this water entry?").assertDoesNotExist()
         rule.onNodeWithText("Save entry").assertDoesNotExist()
-        rule.onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar"))).performClick()
+        rule
+            .onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar")))
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { entries().any { it == entry } }
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         rule.onNodeWithText("Version 1.2.2").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Version 1.2.2 (5)").assertDoesNotExist()
         tap("About")
@@ -189,7 +201,7 @@ class StableRefinementDeviceTest {
                     .copy(reminders = true, timeFormat = "24-hour", start = 480)
             )
         }
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         tap("Notifications")
         for ((theme, oled, dynamic) in
             listOf(

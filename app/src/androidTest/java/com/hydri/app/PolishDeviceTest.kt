@@ -74,7 +74,7 @@ class PolishDeviceTest {
                 .isNotEmpty()
         )
             rule.onNode(matcher).performScrollTo()
-        rule.onNode(matcher).performClick()
+        rule.onNode(matcher).clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
@@ -97,7 +97,7 @@ class PolishDeviceTest {
 
     @Test
     fun preferredNameUsesGlassInEveryThemeAndCancelDoesNotSave() {
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         for ((index, appearance) in appearances.withIndex()) {
             theme(appearance)
             val original = runBlocking { repo.preferences.flow.first().name }
@@ -109,7 +109,7 @@ class PolishDeviceTest {
             assertEquals(original, runBlocking { repo.preferences.flow.first().name })
             tap("Preferred name")
             rule.onNodeWithTag("preferred-name-input").assertTextContains(original)
-            rule.onNodeWithTag("preferred-name-input").performClick()
+            rule.onNodeWithTag("preferred-name-input").clearFloatingNavigation(rule).performClick()
             rule.onNodeWithTag("preferred-name-input").performTextReplacement("jAWad $index")
             rule.onNodeWithText("Save").assertIsDisplayed()
             capture("name-$index")
@@ -122,7 +122,7 @@ class PolishDeviceTest {
     fun reviewPreferencesUsesGlassAndRetainsHistoryAndBottles() {
         val beforeEntries = runBlocking { repo.dao.allEntries() }
         val beforeBottles = runBlocking { repo.dao.allBottles() }
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         for ((index, appearance) in appearances.withIndex()) {
             theme(appearance)
             tap("Review onboarding preferences")
@@ -153,7 +153,11 @@ class PolishDeviceTest {
         }
         for ((index, appearance) in appearances.withIndex()) {
             theme(appearance)
-            rule.onNodeWithTag("daily-reset").performScrollTo().performClick()
+            rule
+                .onNodeWithTag("daily-reset")
+                .performScrollTo()
+                .clearFloatingNavigation(rule)
+                .performClick()
             rule.onNodeWithTag("glass-dialog").assertIsDisplayed()
             rule.onNodeWithText("Reset today's intake?").assertExists()
             capture("reset-$index")
@@ -161,7 +165,7 @@ class PolishDeviceTest {
             await { rule.onAllNodesWithTag("glass-dialog").fetchSemanticsNodes().isEmpty() }
             assertTrue(runBlocking { repo.dao.allEntries().contains(today) })
         }
-        rule.onNodeWithTag("daily-reset").performClick()
+        rule.onNodeWithTag("daily-reset").clearFloatingNavigation(rule).performClick()
         tap("Reset")
         await {
             runBlocking { repo.dao.allEntries().none { it.date == LocalDate.now().toString() } }
@@ -172,7 +176,7 @@ class PolishDeviceTest {
     @Test
     fun personalizationUsesNeutralTextAndContentExtendsBehindFloatingBar() {
         capture("home")
-        rule.onNodeWithContentDescription("More").performClick()
+        rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
         capture("personalization")
         for (appearance in appearances) {
             theme(appearance)

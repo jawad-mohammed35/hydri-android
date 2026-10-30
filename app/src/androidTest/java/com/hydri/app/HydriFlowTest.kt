@@ -77,19 +77,20 @@ class HydriFlowTest {
         )
             text(s).performScrollTo()
         rule.waitForIdle()
-        text(s).performClick()
+        text(s).clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
     private fun tab(s: String) {
         dismissMessage()
-        rule.onNodeWithContentDescription(s).performClick()
+        rule.onNodeWithContentDescription(s).clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
     private fun dismissMessage() {
         val nodes = rule.onAllNodesWithContentDescription("Dismiss")
-        if (nodes.fetchSemanticsNodes().isNotEmpty()) nodes[0].performClick()
+        if (nodes.fetchSemanticsNodes().isNotEmpty())
+            nodes[0].clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
     }
 
@@ -137,7 +138,11 @@ class HydriFlowTest {
             return map[2, map.height / 2].red < .1f
         }
         await { edgeIsDark() }
-        rule.onNodeWithContentDescription("OLED pure black").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("OLED pure black")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await {
             val map = rule.onNodeWithTag("onboarding").captureToImage().toPixelMap()
             map[2, map.height / 2].red < .005f
@@ -179,7 +184,7 @@ class HydriFlowTest {
         anchor.performScrollTo()
         rule.waitForIdle()
         val bounds = anchor.fetchSemanticsNode().boundsInWindow
-        anchor.performClick()
+        anchor.clearFloatingNavigation(rule).performClick()
         rule.waitForIdle()
         val menu = android.graphics.Rect()
         InstrumentationRegistry.getInstrumentation()
@@ -193,9 +198,17 @@ class HydriFlowTest {
         )
         tap("Dark")
         await { runBlocking { repo.preferences.flow.first().theme == "Dark" } }
-        rule.onNodeWithContentDescription("OLED pure black").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("OLED pure black")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         rule.onNodeWithTag("accent-picker").performScrollTo()
-        rule.onNodeWithContentDescription("Lavender").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Lavender")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await {
             runBlocking {
                 val s = repo.preferences.flow.first()
@@ -220,7 +233,10 @@ class HydriFlowTest {
             tap(page)
             text(content).performScrollTo().assertIsDisplayed()
             capture(page.replace(" ", "-"))
-            rule.onNodeWithContentDescription("Back to More").performClick()
+            rule
+                .onNodeWithContentDescription("Back to More")
+                .clearFloatingNavigation(rule)
+                .performClick()
             rule.waitForIdle()
         }
         text("Version 1.2.2").performScrollTo().assertIsDisplayed()
@@ -233,9 +249,17 @@ class HydriFlowTest {
         text("Bottle name").performTextInput("QA flask")
         text("Amount (mL)").performTextReplacement("750")
         rule.onNodeWithTag("bottle-shapes").performScrollTo()
-        rule.onNodeWithContentDescription("Mug").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Mug")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         rule.onNodeWithTag("accent-picker").performScrollTo()
-        rule.onNodeWithContentDescription("Rose").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Rose")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         text("Save bottle").assertIsDisplayed()
         capture("bottle-editor")
         tap("Save bottle")
@@ -254,7 +278,11 @@ class HydriFlowTest {
         }
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").performScrollTo().assertExists()
         tab("Bottles")
-        rule.onNodeWithContentDescription("Unfavorite QA flask").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Unfavorite QA flask")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { runBlocking { !repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
         await {
@@ -265,7 +293,11 @@ class HydriFlowTest {
         }
         rule.onNodeWithContentDescription("Log QA flask, 750 mL").assertDoesNotExist()
         tab("Bottles")
-        rule.onNodeWithContentDescription("Favorite QA flask").performScrollTo().performClick()
+        rule
+            .onNodeWithContentDescription("Favorite QA flask")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { runBlocking { repo.dao.allBottles().first { it.id == b.id }.favorite } }
         tab("Home")
         await {
@@ -294,15 +326,29 @@ class HydriFlowTest {
         rule.waitForIdle()
         row.performTouchInput { swipeLeft(durationMillis = 400) }
         await { entries().none { it.id == entry.id } }
-        rule.onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar"))).performClick()
+        rule
+            .onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar")))
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { entries().any { it == entry } }
-        rule.onNodeWithTag("daily-undo").performScrollTo().performClick()
+        rule
+            .onNodeWithTag("daily-undo")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { entries().none { it.id == entry.id } }
-        rule.onNodeWithTag("daily-reset").performScrollTo().performClick()
+        rule
+            .onNodeWithTag("daily-reset")
+            .performScrollTo()
+            .clearFloatingNavigation(rule)
+            .performClick()
         tap("Cancel")
         assertTrue(entries().any { it.date == LocalDate.now().toString() })
-        rule.onNodeWithTag("daily-reset").performClick()
-        rule.onNode(hasText("Reset") and hasAnyAncestor(hasTestTag("glass-dialog"))).performClick()
+        rule.onNodeWithTag("daily-reset").clearFloatingNavigation(rule).performClick()
+        rule
+            .onNode(hasText("Reset") and hasAnyAncestor(hasTestTag("glass-dialog")))
+            .clearFloatingNavigation(rule)
+            .performClick()
         await { entries().none { it.date == LocalDate.now().toString() } }
         assertTrue(entries().any { it == past })
         rule.onNodeWithTag("daily-undo").assertIsNotEnabled()
@@ -313,7 +359,7 @@ class HydriFlowTest {
     fun customTimeEditsAndExpandableHistory() {
         tap("Custom amount")
         text("Amount (mL)").performTextReplacement("375")
-        rule.onNodeWithText("Time:", substring = true).performClick()
+        rule.onNodeWithText("Time:", substring = true).clearFloatingNavigation(rule).performClick()
         val fields = rule.onAllNodes(hasSetTextAction())
         fields[1].performTextReplacement("23")
         fields[2].performTextReplacement("45")
@@ -328,7 +374,7 @@ class HydriFlowTest {
         dismissMessage()
         tap("Custom water")
         text("Amount (mL)").performTextReplacement("500")
-        rule.onNodeWithText("Time:", substring = true).performClick()
+        rule.onNodeWithText("Time:", substring = true).clearFloatingNavigation(rule).performClick()
         rule.onAllNodes(hasSetTextAction())[1].performTextReplacement("0")
         rule.onAllNodes(hasSetTextAction())[2].performTextReplacement("15")
         tap("Save entry")
@@ -349,7 +395,7 @@ class HydriFlowTest {
             )
         exposeAboveNavigation(history)
         text("QA history").assertDoesNotExist()
-        history.performClick()
+        history.clearFloatingNavigation(rule).performClick()
         text("QA history").performScrollTo().assertIsDisplayed()
         capture("history-expanded")
         tap("QA history")
@@ -359,7 +405,7 @@ class HydriFlowTest {
             entries().any { it.id == past.id && it.volume == 600_000L && it.date == past.date }
         }
         exposeAboveNavigation(history)
-        history.performClick()
+        history.clearFloatingNavigation(rule).performClick()
         text("QA history").assertDoesNotExist()
         text("Badges").performScrollTo().assertIsDisplayed()
         text("First Drop").performScrollTo().assertIsDisplayed()
