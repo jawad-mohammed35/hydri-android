@@ -78,5 +78,9 @@ Time: 51.998
 
 OK (2 tests)
 
+Downloaded public APK upgrade-preservation verification
+com.hydri.app.UpgradeDeviceTest:.
 
+Time: 0.069
 
+OK (1 test)

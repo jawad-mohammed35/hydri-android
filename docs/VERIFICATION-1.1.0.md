@@ -60,3 +60,6 @@ adb -s emulator-5580 shell am instrument -w -e hydriQa true com.hydri.app.test/a
 The upgrade test skips without its baseline file. Source UI tests restore their snapshot after each scenario. The QA AVD retains its synthetic fixtures for reproducibility; no personal data was used.
 
 The release APK and its SHA-256 are in the GitHub release assets. The original `v1.0.0-test.1` release is retained. Source implementation commit: `414e42f` (later documentation/test-synchronization commits do not change app behavior). Raw local test/build logs remain under `.tools/` and Gradle reports under `app/build/`, excluded from Git.
+
+
+Maintenance note (October 30, 2026): the v1.0.0-test.1, v1.1.0 and v1.2.0 pre-release entries/assets were removed after verification of stable 1.2.3. Their source tags remain. This report describes the original release; see [cleanup record](RELEASE-HISTORY.md).

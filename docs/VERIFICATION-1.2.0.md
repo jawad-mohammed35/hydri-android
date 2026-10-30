@@ -52,7 +52,7 @@ APK SHA-256: `e0c5a50746151a5b660f4881fe531f6ca36e02f57ac932f5d7b90e7ae32b3046`.
 
 ## Published artifact
 
-[Release v1.2.0](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.0) was published in the existing public repository, preserving its history and both previous releases. [Hydri-1.2.0.apk](https://github.com/jawad-mohammed35/hydri-android/releases/download/v1.2.0/Hydri-1.2.0.apk) is 13,300,872 bytes. An anonymous download matched the checksum above and passed `apksigner verify` with the original certificate. Installing that downloaded APK with `adb install -r` succeeded; the upgrade-preservation test passed again against it. The release remains a testing pre-release because it intentionally reuses the existing testing signing identity.
+Release v1.2.0 was published in the existing public repository, preserving its history and both previous releases. Hydri-1.2.0.apk is 13,300,872 bytes. An anonymous download matched the checksum above and passed `apksigner verify` with the original certificate. Installing that downloaded APK with `adb install -r` succeeded; the upgrade-preservation test passed again against it. The release remains a testing pre-release because it intentionally reuses the existing testing signing identity.
 
 ## Limits
 
@@ -65,3 +65,6 @@ Widget rendering and real PendingIntent clicks were tested through Android's nat
 ![Widget using changed device palette in system dark mode](widget-1.2-device-dark.png)
 
 ![Hydration Guide with Nordic references and litres](guide-1.2.png)
+
+
+Maintenance note (October 30, 2026): this old pre-release entry and APK were removed after verification of stable 1.2.3. The [v1.2.0 source tag](https://github.com/jawad-mohammed35/hydri-android/tree/v1.2.0) remains. The results above describe the original release; see [cleanup record](RELEASE-HISTORY.md).

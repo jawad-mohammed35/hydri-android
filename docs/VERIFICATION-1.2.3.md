@@ -39,3 +39,9 @@ Native Android checks also requested landscape rotation while Hydri was foregrou
 Tests use synthetic data on the isolated emulator and restore snapshots after each scenario. No personal device was reset. Physical Samsung/other OEM launchers, API 26/older hardware, Android 16 large-screen overrides, TalkBack and frame-time benchmarking were not exercised. Icon mask images are Android-rendered resource studies, not claims of device screenshots from those manufacturers. Launcher-themed icons depend on launcher support and the device's themed-icon setting. No claim of universal launcher behavior or zero future regressions is made.
 
 The reachable-history credential-pattern scan at commit `2ce0da3` covered 220 text blobs across 458 objects and found no matching credentials or sensitive paths. This is a bounded pattern scan, not an exhaustive guarantee. Existing repository safeguards and private signing storage remain unchanged.
+
+## Published APK and release cleanup
+
+[Hydri 1.2.3](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.3) is published, non-draft, non-prerelease and marked latest. Its [public APK download](https://github.com/jawad-mohammed35/hydri-android/releases/download/v1.2.3/Hydri-1.2.3.apk) was downloaded anonymously and matched the size/hash above. That downloaded file passed signature verification, installed with `adb install -r`, launched with `Status: ok` / `LaunchState: COLD`, and passed the original-data preservation test again (1 test). GitHub detects the repository license as `Apache-2.0`.
+
+Only after those checks, the owner-authorized pre-release entries and assets for v1.0.0-test.1, v1.1.0 and v1.2.0 were removed. No active GitHub workflows were present. Their source tags were checked before and after deletion and retain identical commit SHAs. Stable releases v1.2.1 and v1.2.2 and their assets remain available. See [release-history policy and cleanup record](RELEASE-HISTORY.md).
