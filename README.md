@@ -5,12 +5,12 @@ A native, offline water tracker built with Kotlin and Jetpack Compose. No accoun
 ## Try Hydri on your Android phone
 
 1. Open the release page on your Android phone—no GitHub sign-in is required.
-2. Open [the Android testing release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.0).
-3. Expand **Assets** and download **Hydri-1.2.0.apk**. Choose the APK, not the source-code archive.
+2. Open [the stable Android release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.1).
+3. Expand **Assets** and download **Hydri-1.2.1.apk**. Choose the APK, not the source-code archive.
 4. Open the downloaded APK. If Android prompts, allow your browser or file manager to install apps, then choose **Install**.
 5. Open **Hydri**. New installations show onboarding; upgrades keep your existing data and preferences. The app works offline after installation.
 
-Requires Android 8.0 or newer. The release variant uses the same existing testing certificate as 1.0.0, allowing an in-place upgrade. It is a testing pre-release, not a production-key-signed build. The release includes `SHA256SUMS.txt` for verifying the APK. No account or GitHub sign-in is needed to download or use Hydri.
+Requires Android 8.0 or newer. The stable GitHub release uses the same existing certificate as previous Hydri versions, allowing an in-place upgrade. No new signing identity was created; the existing certificate remains the original Android testing identity. The release APK is non-debuggable and includes `SHA256SUMS.txt` for verification. No account or GitHub sign-in is needed to download or use Hydri.
 
 ![Hydri Home](docs/home.png)
 
@@ -48,12 +48,14 @@ Debug output is at `app/build/outputs/apk/debug/app-debug.apk`. For owner releas
 ## Features
 
 - Five-step setup: welcome, name, live appearance preview, measurements, and preset/custom goal. Default bottles are added automatically; notifications are configured later.
-- Four floating navigation tabs: Home, Bottles, Tracker, More. Tap or drag across the glass indicator to switch tabs, with optional haptics and accessibility tab controls.
-- Favorites-only quick-add, swipe-to-delete with Undo, daily Undo and confirmed today-only Reset. Glass editors support custom amounts, fixed-date/time edits, and bottle previews.
+- Four floating navigation tabs: Home, Bottles, Tracker, More. Tap or drag across the glass indicator to switch tabs, with optional haptics and keyboard focus feedback. In-page links and launcher shortcuts share tab navigation.
+- Favorites-only quick-add, silent successful logging, swipe-to-delete in either direction with Undo, daily Undo and confirmed today-only Reset. Glass editors support custom amounts, fixed-date/time edits, immediate entry deletion, and bottle previews.
 - Bottle creation, names, volumes, seven icon choices, six colors, favorites, and reorder controls.
 - Monthly calendar, expandable sip history by date, interactive day/week/month charts, averages, completion rates, streaks, and six badges. Log past-day water from the selected calendar date.
 - Dated daily goals, themes (system/light/dark), OLED backgrounds, six accents plus Android 12+ Material You device colors, reduced motion, haptics, metric/US fl oz, date/time preferences.
 - Approximate WorkManager reminders, active hours, quiet hours, weekdays, stop-at-goal, evening check-in, completion notifications, sound/vibration preferences, permission-aware notifications.
+- Themed glass reminder-time editors support 12/24-hour input, AM/PM, validation, keyboard handling, and animated Save/Cancel.
+- Native launcher shortcuts: Log Water, Create Bottle, Tracker. Open Hydri once after installing/upgrading to register them, then long-press its launcher icon. Shortcuts reuse the current activity, wait for onboarding when needed, and do not replay after recreation.
 - Responsive Glance widgets follow Hydri's appearance and accent; taller/wider sizes add favorite-bottle quick-add controls that work without opening the app.
 - Dedicated Notifications, Hydration Guide, Data & Backup, and About pages with spring slide transitions and reduced-motion support. CSV export and JSON backup/restore use Android's file picker, with confirmation for destructive operations.
 - Hydration Guide with US and Nordic reference tables, dated primary sources, and live measurement units. Total-water references include food and beverages; they are not drinking-water-only goals.
@@ -97,7 +99,7 @@ app/src/androidTest/    emulator repository and Compose interaction tests
 docs/                   verification report and screenshots
 ```
 
-Developer identity is configurable in `DeveloperInfo` in `MoreScreen.kt`. Version comes from `BuildConfig`. Add new library attributions to `THIRD_PARTY_NOTICES.md` and the in-app list. Add Room migrations when the schema changes; there is no destructive migration fallback.
+About credits Jawad Mohammed and links to his LinkedIn profile. The footer displays the version name from `BuildConfig`; Android retains the version code internally. Add new library attributions to `THIRD_PARTY_NOTICES.md` and the in-app list. Add Room migrations when the schema changes; there is no destructive migration fallback.
 
 ## Tests
 
@@ -107,17 +109,17 @@ Developer identity is configurable in `DeveloperInfo` in `MoreScreen.kt`. Versio
 .\gradlew.bat lintDebug
 ```
 
-Device tests are guarded and skip unless explicitly enabled with `hydriQa=true`. Run them only on a dedicated QA emulator. UI tests snapshot and restore entries, bottles, goals and preferences; they do not reset the application. Upgrade testing compares the original records, all existing preference values, and derived badge statistics against a captured 1.1.0 baseline. The new dynamic-color preference defaults to false.
+Device tests are guarded and skip unless explicitly enabled with `hydriQa=true`. Run them only on a dedicated QA emulator. UI tests snapshot and restore entries, bottles, goals and preferences; they do not reset the application. Upgrade testing compares the original records, all existing preference values, and derived badge statistics against a captured 1.2.0 baseline. No schema changes are needed for 1.2.1.
 
 To opt in for a single dedicated QA emulator, install the debug and Android-test APKs, then run:
 
 ```powershell
-adb -s emulator-5580 shell am instrument -w -e hydriQa true -e class com.hydri.app.UpgradeDeviceTest,com.hydri.app.NavigationAndAppearanceDeviceTest,com.hydri.app.WidgetSyncDeviceTest,com.hydri.app.HydriFlowTest,com.hydri.app.RepositoryDeviceTest com.hydri.app.test/androidx.test.runner.AndroidJUnitRunner
+adb -s emulator-5580 shell am instrument -w -e hydriQa true -e class com.hydri.app.UpgradeDeviceTest,com.hydri.app.StableRefinementDeviceTest,com.hydri.app.LauncherShortcutDeviceTest,com.hydri.app.NavigationAndAppearanceDeviceTest,com.hydri.app.WidgetSyncDeviceTest,com.hydri.app.HydriFlowTest,com.hydri.app.RepositoryDeviceTest com.hydri.app.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-`UpgradeDeviceTest` also requires `upgrade-1.1.0.json` in the app's external-files directory and skips when it is absent. Before upgrading the QA installation, `BaselineCaptureDeviceTest` captures it only with `-e captureBaseline true`. `WidgetSyncDeviceTest` temporarily changes the QA emulator's palette/night mode, restores them afterward, and requires shell widget-binding permission. Do not enable QA tests on a phone containing personal records.
+`UpgradeDeviceTest` also requires `upgrade-1.2.0.json` in the app's external-files directory and skips when it is absent. Before upgrading the QA installation, `BaselineCaptureDeviceTest` captures it only with `-e captureBaseline true`. `WidgetSyncDeviceTest` temporarily changes the QA emulator's palette/night mode, restores them afterward, and requires shell widget-binding permission. Do not enable QA tests on a phone containing personal records.
 
-See [1.2.0 verification](docs/VERIFICATION-1.2.0.md) for current results, [1.1.0 verification](docs/VERIFICATION-1.1.0.md) and [original verification](docs/VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
+See [1.2.1 verification](docs/VERIFICATION-1.2.1.md) for current results, [1.2.0 verification](docs/VERIFICATION-1.2.0.md), [1.1.0 verification](docs/VERIFICATION-1.1.0.md) and [original verification](docs/VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
 
 ## Release status
 
