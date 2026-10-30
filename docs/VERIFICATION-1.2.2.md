@@ -36,6 +36,12 @@ The [security/licensing review](SECURITY-AND-LICENSING.md) records the checked s
 
 The README now uses the existing logo, real sample-data emulator captures, clear download instructions, accurate privacy claims and an explicit licensing-under-review statement. Detailed calculation/build information is preserved in [development documentation](DEVELOPMENT.md).
 
+## Published artifact
+
+[Stable release v1.2.2](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.2) is public and latest, with `draft=false` and `prerelease=false`. All prior releases and APK assets remain available. An anonymous download of [Hydri-1.2.2.apk](https://github.com/jawad-mohammed35/hydri-android/releases/download/v1.2.2/Hydri-1.2.2.apk) matched the recorded checksum, verified with the original certificate, installed with `adb install -r` and passed the upgrade-preservation check again. Normal cold launch returned `Status: ok`.
+
+Local Markdown/image links were checked, and the public repository, latest release, new README images and logo returned HTTP 200. The supplied LinkedIn address is retained as a browser/app link; no claim is made that authenticated LinkedIn profile content was audited. GitHub API checks confirm public visibility, no detected source license, enabled secret scanning/push protection and private reporting. No license, visibility or signing-identity change was made. The isolated emulator was shut down after verification.
+
 ## Limits
 
 No physical Samsung/One UI device, older-Android runtime, TalkBack session or long-duration/frame-time benchmark was available. Widget and launcher behavior was tested on the emulator. Successful tests and an advisory scan are not a blanket security or performance certification. No private signing backup was made or verified outside the local active keystore; the owner must arrange and test encrypted backups.
