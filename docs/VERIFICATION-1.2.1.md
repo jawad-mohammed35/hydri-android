@@ -44,6 +44,12 @@ Before installing 1.2.1, instrumentation captured a complete repository backup a
 
 APK SHA-256: `874ff2172952d516b78126bc3c9f0bbc07abf584b5c2f2868f1bd77c3b0dedea`. Size: 13,303,616 bytes. The final APK was built after test-harness synchronization commit `9fce26f`; application sources are unchanged from `2f36d4e`.
 
+## Published artifact verification
+
+[Stable release v1.2.1](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.2.1) is public, published and marked latest. The API confirms `draft=false` and `prerelease=false`. All previous releases and their APKs remain available.
+
+An anonymous download of [Hydri-1.2.1.apk](https://github.com/jawad-mohammed35/hydri-android/releases/download/v1.2.1/Hydri-1.2.1.apk) matched the checksum above and passed certificate verification. Installing that downloaded binary with `adb install -r` succeeded; the 1.2.0 snapshot-preservation test passed again against it. Normal cold launch returned `Status: ok`. The separate QA emulator was shut down after verification.
+
 ## Limits
 
 No physical Samsung/One UI device or other vendor launcher was available. Native launcher checks used the emulator's launcher; the implementation uses official Android APIs supported by compatible launchers. Keyboard focus and touch rendering were checked, but no TalkBack session or subjective haptic assessment was performed. There was no long-duration performance benchmark or runtime test on older Android versions. Existing app permissions and the offline data architecture remain unchanged.
