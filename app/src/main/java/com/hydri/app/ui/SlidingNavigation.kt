@@ -64,12 +64,21 @@ fun SlidingNavigation(selected: String, haptics: Boolean, onSelect: (String) -> 
         Surface(
             Modifier.widthIn(max = 640.dp).fillMaxWidth(),
             shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+            color = androidx.compose.ui.graphics.Color.Transparent,
             tonalElevation = 3.dp,
             border = BorderStroke(1.dp, tint.copy(alpha = .14f)),
         ) {
             Box(
-                Modifier.padding(6.dp)
+                Modifier.background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = .97f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = .97f),
+                            )
+                        )
+                    )
+                    .padding(6.dp)
                     .onSizeChanged { width = it.width.toFloat() }
                     .testTag("sliding-navigation")
                     .pointerInput(haptics, rtl) {

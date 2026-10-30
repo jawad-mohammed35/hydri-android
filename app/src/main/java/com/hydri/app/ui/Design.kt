@@ -46,6 +46,7 @@ val bottleIcons =
 val bottleNames =
     listOf("Glass", "Bottle", "Large bottle", "Tumbler", "Sports bottle", "Mug", "Custom container")
 val LocalReducedMotion = staticCompositionLocalOf { false }
+val LocalFloatingBarInset = staticCompositionLocalOf { 0.dp }
 
 @Composable
 fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
@@ -144,7 +145,7 @@ fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(top = 20.dp, bottom = 20.dp),
+                .padding(top = 20.dp, bottom = 20.dp + LocalFloatingBarInset.current),
             verticalArrangement = Arrangement.spacedBy(22.dp),
             content = content,
         )

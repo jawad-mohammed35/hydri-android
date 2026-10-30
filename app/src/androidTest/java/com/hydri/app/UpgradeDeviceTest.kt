@@ -19,8 +19,8 @@ class UpgradeDeviceTest {
             InstrumentationRegistry.getArguments().getString("hydriQa") == "true",
         )
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val baseline = File(context.getExternalFilesDir(null), "upgrade-1.2.0.json")
-        Assume.assumeTrue("Requires the captured 1.2.0 baseline", baseline.exists())
+        val baseline = File(context.getExternalFilesDir(null), "upgrade-1.2.1.json")
+        Assume.assumeTrue("Requires the captured 1.2.1 baseline", baseline.exists())
         val original = JSONObject(baseline.readText())
         val repo = (context.applicationContext as HydriApplication).repository
         val current = JSONObject(repo.backup())

@@ -49,6 +49,7 @@ fun HydriApp(
     var entryOpen by remember { mutableStateOf(false) }
     var entryDate by remember { mutableStateOf<LocalDate?>(null) }
     var goalOpen by remember { mutableStateOf(false) }
+    var resetTodayOpen by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     val permission =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -110,6 +111,7 @@ fun HydriApp(
                         entryOpen = false
                         bottleOpen = false
                         goalOpen = false
+                        resetTodayOpen = false
                         confirm = null
                         when (shortcut) {
                             LauncherShortcuts.LOG_WATER -> {
@@ -141,127 +143,142 @@ fun HydriApp(
                     val reduced = LocalReducedMotion.current
                     val secondary =
                         setOf("Notifications", "Hydration Guide", "Data & Backup", "About")
-                    NavHost(
-                        nav,
-                        "Home",
-                        Modifier.padding(padding),
-                        enterTransition = {
-                            if (reduced) EnterTransition.None
-                            else if (targetState.destination.route in secondary)
-                                slideInHorizontally(spring(dampingRatio = .88f, stiffness = 550f)) {
-                                    it
-                                } + fadeIn(tween(140))
-                            else fadeIn(tween(160))
-                        },
-                        exitTransition = {
-                            if (reduced) ExitTransition.None
-                            else if (targetState.destination.route in secondary)
-                                slideOutHorizontally(tween(230)) { -it / 5 } + fadeOut(tween(150))
-                            else fadeOut(tween(160))
-                        },
-                        popEnterTransition = {
-                            if (reduced) EnterTransition.None
-                            else if (initialState.destination.route in secondary)
-                                slideInHorizontally(tween(230)) { -it / 5 } + fadeIn(tween(170))
-                            else fadeIn(tween(160))
-                        },
-                        popExitTransition = {
-                            if (reduced) ExitTransition.None
-                            else if (initialState.destination.route in secondary)
-                                slideOutHorizontally(spring(dampingRatio = .9f, stiffness = 600f)) {
-                                    it
-                                } + fadeOut(tween(180))
-                            else fadeOut(tween(160))
-                        },
+                    CompositionLocalProvider(
+                        LocalFloatingBarInset provides
+                            if (route in primaryTabs) padding.calculateBottomPadding() else 0.dp
                     ) {
-                        composable("Home") {
-                            HomeScreen(
-                                state,
-                                onLog = { b ->
-                                    if (state.settings.haptics)
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    vm.log(b.volume, b.name)
-                                },
-                                onCustom = {
-                                    entryEditor = null
-                                    entryDate = null
-                                    entryOpen = true
-                                },
-                                onEntry = {
-                                    entryEditor = it
-                                    entryOpen = true
-                                },
-                                onUndo = vm::undoToday,
-                                onReset = {
-                                    confirm =
-                                        "Clear all of today's sips? Other days will be kept." to
-                                            {
-                                                vm.resetToday()
-                                            }
-                                },
-                                onDelete = vm::delete,
-                                onBottles = { openPrimary("Bottles") },
-                            )
-                        }
-                        composable("Bottles") {
-                            BottlesScreen(
-                                state,
-                                { b ->
-                                    bottleEditor = b
-                                    bottleOpen = true
-                                },
-                                { b -> vm.bottle(b.copy(favorite = !b.favorite)) },
-                                vm::move,
-                                { b ->
-                                    confirm =
-                                        "Delete ${b.name}? Saved water entries will stay in your history." to
-                                            {
-                                                vm.deleteBottle(b)
-                                            }
-                                },
-                            )
-                        }
-                        composable("Tracker") {
-                            TrackerScreen(
-                                state,
-                                onEntry = {
-                                    entryEditor = it
-                                    entryOpen = true
-                                },
-                                onAdd = { date ->
-                                    entryEditor = null
-                                    entryDate = date
-                                    entryOpen = true
-                                },
-                            )
-                        }
-                        composable("More") {
-                            MoreScreen(
-                                state,
-                                vm,
-                                ::requestNotifications,
-                                { goalOpen = true },
-                                { message, action -> confirm = message to action },
-                                snackbar,
-                                onNavigate = { nav.navigate(it) },
-                            )
-                        }
-                        listOf("Notifications", "Hydration Guide", "Data & Backup", "About")
-                            .forEach { page ->
-                                composable(page) {
-                                    MoreScreen(
-                                        state,
-                                        vm,
-                                        ::requestNotifications,
-                                        { goalOpen = true },
-                                        { message, action -> confirm = message to action },
-                                        snackbar,
-                                        page = page,
-                                        onNavigate = { nav.navigate(it) },
-                                        onBack = { nav.popBackStack() },
-                                    )
-                                }
+                        NavHost(
+                            nav,
+                            "Home",
+                            Modifier.padding(
+                                    start =
+                                        padding.calculateStartPadding(LocalLayoutDirection.current),
+                                    end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                                    top = padding.calculateTopPadding(),
+                                    bottom =
+                                        if (route in primaryTabs) 0.dp
+                                        else padding.calculateBottomPadding(),
+                                )
+                                .testTag("page-viewport"),
+                            enterTransition = {
+                                if (reduced) EnterTransition.None
+                                else if (targetState.destination.route in secondary)
+                                    slideInHorizontally(
+                                        spring(dampingRatio = .88f, stiffness = 550f)
+                                    ) {
+                                        it
+                                    } + fadeIn(tween(140))
+                                else fadeIn(tween(160))
+                            },
+                            exitTransition = {
+                                if (reduced) ExitTransition.None
+                                else if (targetState.destination.route in secondary)
+                                    slideOutHorizontally(tween(230)) { -it / 5 } +
+                                        fadeOut(tween(150))
+                                else fadeOut(tween(160))
+                            },
+                            popEnterTransition = {
+                                if (reduced) EnterTransition.None
+                                else if (initialState.destination.route in secondary)
+                                    slideInHorizontally(tween(230)) { -it / 5 } + fadeIn(tween(170))
+                                else fadeIn(tween(160))
+                            },
+                            popExitTransition = {
+                                if (reduced) ExitTransition.None
+                                else if (initialState.destination.route in secondary)
+                                    slideOutHorizontally(
+                                        spring(dampingRatio = .9f, stiffness = 600f)
+                                    ) {
+                                        it
+                                    } + fadeOut(tween(180))
+                                else fadeOut(tween(160))
+                            },
+                        ) {
+                            composable("Home") {
+                                HomeScreen(
+                                    state,
+                                    onLog = { b ->
+                                        if (state.settings.haptics)
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.LongPress
+                                            )
+                                        vm.log(b.volume, b.name)
+                                    },
+                                    onCustom = {
+                                        entryEditor = null
+                                        entryDate = null
+                                        entryOpen = true
+                                    },
+                                    onEntry = {
+                                        entryEditor = it
+                                        entryOpen = true
+                                    },
+                                    onUndo = vm::undoToday,
+                                    onReset = { resetTodayOpen = true },
+                                    onDelete = vm::delete,
+                                    onBottles = { openPrimary("Bottles") },
+                                )
                             }
+                            composable("Bottles") {
+                                BottlesScreen(
+                                    state,
+                                    { b ->
+                                        bottleEditor = b
+                                        bottleOpen = true
+                                    },
+                                    { b -> vm.bottle(b.copy(favorite = !b.favorite)) },
+                                    vm::move,
+                                    { b ->
+                                        confirm =
+                                            "Delete ${b.name}? Saved water entries will stay in your history." to
+                                                {
+                                                    vm.deleteBottle(b)
+                                                }
+                                    },
+                                )
+                            }
+                            composable("Tracker") {
+                                TrackerScreen(
+                                    state,
+                                    onEntry = {
+                                        entryEditor = it
+                                        entryOpen = true
+                                    },
+                                    onAdd = { date ->
+                                        entryEditor = null
+                                        entryDate = date
+                                        entryOpen = true
+                                    },
+                                )
+                            }
+                            composable("More") {
+                                MoreScreen(
+                                    state,
+                                    vm,
+                                    ::requestNotifications,
+                                    { goalOpen = true },
+                                    { message, action -> confirm = message to action },
+                                    snackbar,
+                                    onNavigate = { nav.navigate(it) },
+                                )
+                            }
+                            listOf("Notifications", "Hydration Guide", "Data & Backup", "About")
+                                .forEach { page ->
+                                    composable(page) {
+                                        MoreScreen(
+                                            state,
+                                            vm,
+                                            ::requestNotifications,
+                                            { goalOpen = true },
+                                            { message, action -> confirm = message to action },
+                                            snackbar,
+                                            page = page,
+                                            onNavigate = { nav.navigate(it) },
+                                            onBack = { nav.popBackStack() },
+                                        )
+                                    }
+                                }
+                        }
                     }
                 }
             }
@@ -331,23 +348,35 @@ fun HydriApp(
                     vm.goal(it)
                     goalOpen = false
                 }
-            confirm?.let { (message, action) ->
-                AlertDialog(
-                    onDismissRequest = { confirm = null },
-                    title = { Text("Please confirm") },
-                    text = { Text(message) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                confirm = null
-                                action()
-                            }
-                        ) {
-                            Text("Confirm")
-                        }
+            if (resetTodayOpen)
+                GlassDialog(
+                    "Reset today's intake?",
+                    "Reset",
+                    { resetTodayOpen = false },
+                    {
+                        vm.resetToday()
+                        resetTodayOpen = false
                     },
-                    dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } },
-                )
+                    destructive = true,
+                ) {
+                    Text(
+                        "This removes all of today's logged water entries. Other days, bottles and preferences are kept.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            confirm?.let { (message, action) ->
+                GlassDialog(
+                    title = "Please confirm",
+                    confirmLabel = "Confirm",
+                    onDismiss = { confirm = null },
+                    onConfirm = {
+                        confirm = null
+                        action()
+                    },
+                    destructive = true,
+                ) {
+                    Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

@@ -173,8 +173,8 @@ class StableRefinementDeviceTest {
         rule.onNode(hasText("Undo") and hasAnyAncestor(hasTestTag("snackbar"))).performClick()
         await { entries().any { it == entry } }
         rule.onNodeWithContentDescription("More").performClick()
-        rule.onNodeWithText("Version 1.2.1").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Version 1.2.1 (4)").assertDoesNotExist()
+        rule.onNodeWithText("Version 1.2.2").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Version 1.2.2 (5)").assertDoesNotExist()
         tap("About")
         rule.onNodeWithText("Developed by Jawad Mohammed").assertIsDisplayed()
         rule.onNodeWithText("LinkedIn").assertHasClickAction()

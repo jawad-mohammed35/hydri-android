@@ -48,6 +48,7 @@ fun MoreScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var editName by remember { mutableStateOf(false) }
+    var reviewPreferences by remember { mutableStateOf(false) }
     var name by remember(s.name) { mutableStateOf(s.name) }
     var info by remember { mutableStateOf<Pair<String, String>?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -127,20 +128,43 @@ fun MoreScreen(
         if (page == "More") {
             PageHeader("More")
             GlassCard(Modifier.fillMaxWidth()) {
-                Eyebrow("PERSONALIZATION")
-                TextButton(onClick = { editName = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Preferred name", Modifier.weight(1f))
-                    Text(s.name.ifBlank { "Add a name" })
-                }
-                TextButton(onClick = onGoal) { Text("Daily hydration goal") }
+                Text(
+                    "PERSONALIZATION",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 TextButton(
                     onClick = {
-                        onConfirm(
-                            "Reopen the setup flow? Your water history and bottles will be kept."
-                        ) {
-                            save { latest -> latest.copy(onboarded = false) }
-                        }
-                    }
+                        name = s.name
+                        editName = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                ) {
+                    Text("Preferred name", Modifier.weight(1f))
+                    Text(
+                        s.name.ifBlank { "Add a name" },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                TextButton(
+                    onClick = onGoal,
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                ) {
+                    Text("Daily hydration goal")
+                }
+                TextButton(
+                    onClick = { reviewPreferences = true },
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
                 ) {
                     Text("Review onboarding preferences")
                 }
@@ -466,35 +490,44 @@ fun MoreScreen(
             }
         }
     }
+    if (reviewPreferences)
+        GlassDialog(
+            "Review preferences",
+            "Review",
+            { reviewPreferences = false },
+            {
+                save { latest -> latest.copy(onboarded = false) }
+                reviewPreferences = false
+            },
+        ) {
+            Text(
+                "Review your name, appearance, units and daily goal in the setup flow. Your water history and bottles are kept.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     if (editName)
-        AlertDialog(
-            onDismissRequest = { editName = false },
-            title = { Text("Preferred name") },
-            text = {
-                OutlinedTextField(
-                    name,
-                    { name = it.take(60) },
-                    label = { Text("Preferred name") },
-                    singleLine = true,
-                    keyboardOptions =
-                        androidx.compose.foundation.text.KeyboardOptions(
-                            capitalization =
-                                androidx.compose.ui.text.input.KeyboardCapitalization.Words
-                        ),
-                )
+        GlassDialog(
+            "Preferred name",
+            "Save",
+            { editName = false },
+            {
+                save { latest -> latest.copy(name = name.trim()) }
+                editName = false
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        save { latest -> latest.copy(name = name.trim()) }
-                        editName = false
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = { TextButton(onClick = { editName = false }) { Text("Cancel") } },
-        )
+        ) {
+            OutlinedTextField(
+                name,
+                { name = it.take(60) },
+                label = { Text("Preferred name") },
+                singleLine = true,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                modifier = Modifier.fillMaxWidth().testTag("preferred-name-input"),
+                keyboardOptions =
+                    androidx.compose.foundation.text.KeyboardOptions(
+                        capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words
+                    ),
+            )
+        }
     info?.let { (title, text) ->
         AlertDialog(
             onDismissRequest = { info = null },

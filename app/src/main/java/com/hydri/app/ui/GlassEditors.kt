@@ -8,13 +8,10 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
 import java.time.*
@@ -29,72 +26,7 @@ fun GlassEditor(
     onSave: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Dialog(
-        onDismiss,
-        properties =
-            DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
-        BoxWithConstraints(
-            Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(18.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(
-                Modifier.widthIn(max = 480.dp).fillMaxWidth().heightIn(max = maxHeight),
-                shape = RoundedCornerShape(32.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = .98f),
-                tonalElevation = 4.dp,
-                shadowElevation = 12.dp,
-                border =
-                    BorderStroke(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = .24f),
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .35f),
-                            )
-                        ),
-                    ),
-            ) {
-                Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Outlined.Close, "Close editor")
-                        }
-                    }
-                    Column(
-                        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
-                        content = content,
-                    )
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        OutlinedButton(
-                            onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(18.dp),
-                        ) {
-                            Text("Cancel")
-                        }
-                        Button(
-                            onSave,
-                            enabled = enabled,
-                            modifier = Modifier.weight(1.3f),
-                            shape = RoundedCornerShape(18.dp),
-                        ) {
-                            Text(saveLabel)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    GlassDialog(title, saveLabel, onDismiss, onSave, enabled = enabled, content = content)
 }
 
 @Composable

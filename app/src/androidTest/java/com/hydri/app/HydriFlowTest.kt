@@ -211,7 +211,7 @@ class HydriFlowTest {
             rule.onNodeWithContentDescription("Back to More").performClick()
             rule.waitForIdle()
         }
-        text("Version 1.2.1").performScrollTo().assertIsDisplayed()
+        text("Version 1.2.2").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -290,7 +290,7 @@ class HydriFlowTest {
         tap("Cancel")
         assertTrue(entries().any { it.date == LocalDate.now().toString() })
         rule.onNodeWithTag("daily-reset").performClick()
-        tap("Confirm")
+        rule.onNode(hasText("Reset") and hasAnyAncestor(hasTestTag("glass-dialog"))).performClick()
         await { entries().none { it.date == LocalDate.now().toString() } }
         assertTrue(entries().any { it == past })
         rule.onNodeWithTag("daily-undo").assertIsNotEnabled()
