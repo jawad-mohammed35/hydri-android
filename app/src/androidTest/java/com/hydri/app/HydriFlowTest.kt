@@ -68,7 +68,14 @@ class HydriFlowTest {
     private fun text(s: String) = rule.onNodeWithText(s)
 
     private fun tap(s: String) {
-        if (!text(s).isDisplayed()) text(s).performScrollTo()
+        // A partially visible card can report displayed while its tap center is below the footer.
+        if (
+            rule
+                .onAllNodes(hasScrollAction() and hasAnyDescendant(hasText(s)))
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        )
+            text(s).performScrollTo()
         rule.waitForIdle()
         text(s).performClick()
         rule.waitForIdle()
@@ -107,6 +114,10 @@ class HydriFlowTest {
         text("Name (optional)").performTextReplacement("jAWad")
         text("Continue").assertIsDisplayed()
         tap("Continue")
+        rule.waitUntil(10000) {
+            androidx.core.view.ViewCompat.getRootWindowInsets(rule.activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) != true
+        }
         if (!enlarged) rule.onNodeWithContentDescription("OLED pure black").assertIsDisplayed()
         tap("Dark")
         fun edgeIsDark(): Boolean {
@@ -257,7 +268,9 @@ class HydriFlowTest {
         }
         await { rule.onAllNodesWithText("No favorite bottles").fetchSemanticsNodes().isNotEmpty() }
         tap("Choose favorites in Bottles")
-        text("Create a bottle").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Bottles").assertIsSelected()
+        // Shared tab navigation restores this page's scroll position.
+        text("Create a bottle").performScrollTo().assertIsDisplayed()
     }
 
     @Test
