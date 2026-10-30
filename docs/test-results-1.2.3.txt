@@ -1,0 +1,82 @@
+Hydri 1.2.3 — executed QA results
+
+Build: debug/release APK + instrumentation APK + unit tests + lintDebug/lintRelease succeeded.
+Unit tests: EntryTimeTest 4, HydrationTest 11, NavigationAndGuideTest 4; 0 failures/errors.
+Lint: 0 errors, 27 warnings per variant.
+
+Standard-size emulator suite (41 pass)
+
+com.hydri.app.UpgradeDeviceTest:.
+com.hydri.app.FinalVisualDeviceTest:......
+com.hydri.app.LauncherIconDeviceTest:..
+com.hydri.app.PolishDeviceTest:....
+com.hydri.app.StableRefinementDeviceTest:......
+com.hydri.app.LauncherShortcutDeviceTest:...
+com.hydri.app.NavigationAndAppearanceDeviceTest:.....
+com.hydri.app.WidgetSyncDeviceTest:...
+com.hydri.app.HydriFlowTest:.....
+com.hydri.app.RepositoryDeviceTest:......
+
+Time: 195.944
+
+OK (41 tests)
+
+
+
+Small-screen suite (27 pass, one test synchronization failure)
+
+com.hydri.app.FinalVisualDeviceTest:......
+com.hydri.app.LauncherIconDeviceTest:..
+com.hydri.app.PolishDeviceTest:....
+com.hydri.app.StableRefinementDeviceTest:......
+com.hydri.app.NavigationAndAppearanceDeviceTest:....
+Error in secondaryPagesSlideAndSystemBackReturns(com.hydri.app.NavigationAndAppearanceDeviceTest):
+java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (TestTag = 'settings-page-Notifications')
+
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+	at com.hydri.app.NavigationAndAppearanceDeviceTest.secondaryPagesSlideAndSystemBackReturns(NavigationAndAppearanceDeviceTest.kt:166)
+
+com.hydri.app.HydriFlowTest:.....
+
+Time: 332.843
+There was 1 failure:
+1) secondaryPagesSlideAndSystemBackReturns(com.hydri.app.NavigationAndAppearanceDeviceTest)
+java.lang.AssertionError: Failed: assertExists.
+Reason: Expected exactly '1' node but could not find any node that satisfies: (TestTag = 'settings-page-Notifications')
+
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow(SemanticsNodeInteraction.kt:178)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.fetchOneOrThrow$default(SemanticsNodeInteraction.kt:150)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists(SemanticsNodeInteraction.kt:125)
+	at androidx.compose.ui.test.SemanticsNodeInteraction.assertExists$default(SemanticsNodeInteraction.kt:124)
+	at com.hydri.app.NavigationAndAppearanceDeviceTest.secondaryPagesSlideAndSystemBackReturns(NavigationAndAppearanceDeviceTest.kt:166)
+
+FAILURES!!!
+Tests run: 28,  Failures: 1
+
+
+
+Affected small-screen navigation class after synchronization correction (5 pass)
+
+com.hydri.app.NavigationAndAppearanceDeviceTest:.....
+
+Time: 46.144
+
+OK (5 tests)
+
+
+
+Isolated keyboard/native-back verification (2 pass)
+
+com.hydri.app.PolishDeviceTest:.
+com.hydri.app.NavigationAndAppearanceDeviceTest:.
+
+Time: 51.998
+
+OK (2 tests)
+
+
+

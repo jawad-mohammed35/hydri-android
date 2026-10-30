@@ -61,7 +61,11 @@ class NavigationAndAppearanceDeviceTest {
     private fun tap(s: String) {
         val n = rule.onNodeWithText(s)
         if (!n.isDisplayed()) n.performScrollTo()
-        n.clearFloatingNavigation(rule).performClick()
+        n.clearFloatingNavigation(rule)
+        // Finish the helper's fling before a new touch; otherwise the tap only stops scrolling.
+        rule.mainClock.advanceTimeBy(1000)
+        rule.waitForIdle()
+        n.performClick()
         rule.waitForIdle()
     }
 
@@ -162,8 +166,11 @@ class NavigationAndAppearanceDeviceTest {
             )
             .use { fd -> java.io.FileInputStream(fd.fileDescriptor).use { it.readBytes() } }
         await { rule.onAllNodesWithTag("settings-page-More").fetchSemanticsNodes().isNotEmpty() }
+        // More enters before About has finished its native predictive-back transition.
+        await { rule.onAllNodesWithTag("settings-page-About").fetchSemanticsNodes().isEmpty() }
+        rule.waitForIdle()
         tap("Notifications")
-        rule.onNodeWithTag("settings-page-Notifications").assertExists()
+        await { rule.onAllNodesWithTag("settings-page-Notifications").fetchSemanticsNodes().isNotEmpty() }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         Thread.sleep(300) // Android's real input dispatcher is separate from the Compose test clock.
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
