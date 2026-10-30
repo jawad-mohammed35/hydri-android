@@ -14,4 +14,6 @@ Full Apache and EPL license texts are in `LICENSES/` and bundled in the applicat
 
 The hydration reference is attributed to the Institute of Medicine, *Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate* (2005), https://doi.org/10.17226/10925. It describes total water from food and all beverages, not drinking-water-only goals. No affiliation or endorsement is implied.
 
-Hydri is local development work. No license for Hydri's own source has been selected on the owner's behalf.
+Hydri is publicly distributed. No license for Hydri's own source has been selected on the owner's behalf.
+
+Additional Hydration Guide references: Nordic Nutrition Recommendations (2023), adopting EFSA (2010) total-water values, https://pub.norden.org/nord2023-003/fluid-and-water-balance.html; CDC, Water and Healthier Drinks (webpage updated March 5, 2026), https://www.cdc.gov/healthy-weight-growth/water-healthy-drinks/. Dates and reference scope are distinguished in the guide.
