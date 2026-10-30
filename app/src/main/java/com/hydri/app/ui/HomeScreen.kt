@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import androidx.compose.foundation.*
@@ -33,7 +36,7 @@ fun HomeScreen(
     val goal = state.goal(state.today)
     val favorites = state.bottles.filter { it.favorite }
     val entries = state.entriesOn(state.today)
-    ScreenColumn {
+    ScreenColumn(scrollKey = "Home") {
         val greeting =
             when (state.hour) {
                 in 5..11 -> "Good morning"
@@ -94,6 +97,7 @@ fun HomeScreen(
                     row.forEach { b ->
                         GlassCard(
                             Modifier.weight(1f)
+                                .clip(RoundedCornerShape(28.dp))
                                 .clickable { onLog(b) }
                                 .semantics(mergeDescendants = true) {
                                     role = Role.Button
@@ -224,7 +228,15 @@ private fun SipRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (framed) Symbol(Icons.Outlined.WaterDrop, size = 36)
+            if (framed)
+                Symbol(
+                    e.bottleIcon?.let { bottleIcons.getOrNull(it) } ?: Icons.Outlined.WaterDrop,
+                    label =
+                        e.bottleIcon?.let { bottleNames.getOrNull(it) }?.let { "$it sip" }
+                            ?: "Custom water sip",
+                    color = e.bottleColor?.let { accents.getOrNull(it) } ?: accents[0],
+                    size = 36,
+                )
             Column(Modifier.weight(1f)) {
                 Text(e.name, style = MaterialTheme.typography.bodyMedium)
                 Text(

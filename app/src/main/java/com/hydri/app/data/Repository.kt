@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.data
 
 import androidx.room.withTransaction
@@ -34,6 +37,7 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
         name: String,
         date: LocalDate = LocalDate.now(),
         timestamp: Long = System.currentTimeMillis(),
+        bottle: Bottle? = null,
     ): WaterEntry =
         writes.withLock {
             require(volume in 1_000..20_000_000 && date <= LocalDate.now())
@@ -45,6 +49,9 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
                     date.toString(),
                     name.take(60),
                     ZoneId.systemDefault().id,
+                    bottle?.id,
+                    bottle?.icon,
+                    bottle?.color,
                 )
             db.withTransaction {
                 if (dao.allGoals().none { it.date <= date.toString() })
@@ -105,6 +112,9 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
                                         put("date", e.date)
                                         put("name", e.name)
                                         put("zone", e.zone)
+                                        put("bottleId", e.bottleId ?: JSONObject.NULL)
+                                        put("bottleIcon", e.bottleIcon ?: JSONObject.NULL)
+                                        put("bottleColor", e.bottleColor ?: JSONObject.NULL)
                                     }
                                 )
                             }
@@ -164,7 +174,8 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
             fun volume(j: JSONObject): Long =
                 j.getLong("volume").also { require(it in 1_000..20_000_000) }
             fun name(j: JSONObject) = j.getString("name").also { require(it.length in 1..60) }
-            fun id(j: JSONObject) = j.getString("id").also { require(it.length in 1..100) }
+            fun idValue(value: String) = value.also { require(it.length in 1..100) }
+            fun id(j: JSONObject) = idValue(j.getString("id"))
             val entries =
                 array("entries").map { j ->
                     WaterEntry(
@@ -176,6 +187,11 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
                             .toString(),
                         name(j),
                         ZoneId.of(j.getString("zone")).id,
+                        if (j.isNull("bottleId")) null else idValue(j.getString("bottleId")),
+                        if (j.isNull("bottleIcon")) null
+                        else j.getInt("bottleIcon").also { require(it in 0..6) },
+                        if (j.isNull("bottleColor")) null
+                        else j.getInt("bottleColor").also { require(it in 0..5) },
                     )
                 }
             val bottles =

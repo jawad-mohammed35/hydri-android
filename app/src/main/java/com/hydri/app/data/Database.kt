@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.data
 
 import androidx.room.*
@@ -11,6 +14,9 @@ data class WaterEntry(
     val date: String,
     val name: String,
     val zone: String,
+    val bottleId: String? = null,
+    val bottleIcon: Int? = null,
+    val bottleColor: Int? = null,
 )
 
 @Entity(tableName = "bottles")
@@ -65,9 +71,21 @@ interface HydriDao {
 
 @Database(
     entities = [WaterEntry::class, Bottle::class, Goal::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class HydriDatabase : RoomDatabase() {
     abstract fun dao(): HydriDao
+
+    companion object {
+        val MIGRATION_1_2 =
+            object : androidx.room.migration.Migration(1, 2) {
+                override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    // Nullable snapshots preserve legacy rows without guessing their bottle.
+                    db.execSQL("ALTER TABLE entries ADD COLUMN bottleId TEXT")
+                    db.execSQL("ALTER TABLE entries ADD COLUMN bottleIcon INTEGER")
+                    db.execSQL("ALTER TABLE entries ADD COLUMN bottleColor INTEGER")
+                }
+            }
+    }
 }

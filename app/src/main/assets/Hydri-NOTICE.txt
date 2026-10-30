@@ -1,0 +1,11 @@
+Hydri
+Copyright 2026 Jawad Mohammed
+
+Licensed under the Apache License, Version 2.0.
+
+This application includes software developed by the Android Open Source
+Project, Google, JetBrains, and other contributors. Their copyright and
+license notices remain applicable; see THIRD_PARTY_NOTICES.md, LICENSES/,
+and bundled library META-INF notices.
+
+This notice is informational and does not modify the Apache License.

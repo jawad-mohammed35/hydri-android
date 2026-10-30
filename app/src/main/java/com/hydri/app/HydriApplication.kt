@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app
 
 import android.app.Application
@@ -11,7 +14,9 @@ class HydriApplication : Application() {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val repository by lazy {
         Repository(
-            Room.databaseBuilder(this, HydriDatabase::class.java, "hydri.db").build(),
+            Room.databaseBuilder(this, HydriDatabase::class.java, "hydri.db")
+                .addMigrations(HydriDatabase.MIGRATION_1_2)
+                .build(),
             PreferenceStore(this),
         )
     }

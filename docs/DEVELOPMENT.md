@@ -1,6 +1,6 @@
 # Development and data rules
 
-Run the commands below from the repository root. Source licensing remains under review; these instructions do not select a license or grant additional reuse rights.
+Run the commands below from the repository root. Hydri is licensed under Apache License 2.0; see the root LICENSE and third-party notices.
 
 ## Open and run
 
@@ -89,6 +89,8 @@ docs/                   verification report and screenshots
 
 About credits Jawad Mohammed and links to his LinkedIn profile. The footer displays the version name from `BuildConfig`; Android retains the version code internally. Add new library attributions to `THIRD_PARTY_NOTICES.md` and the in-app list. Add Room migrations when the schema changes; there is no destructive migration fallback.
 
+Bottle icon/color indices are stable persisted IDs, including entry snapshots from schema 2. Append options rather than reordering the existing palettes; use an explicit migration if those IDs ever change. Do not infer a legacy entry's bottle from its name or volume. Keep the optional snapshot fields in JSON backup/restore paths and preserve them when editing an entry.
+
 ## Tests
 
 ```powershell
@@ -97,7 +99,7 @@ About credits Jawad Mohammed and links to his LinkedIn profile. The footer displ
 .\gradlew.bat lintDebug
 ```
 
-Device tests are guarded and skip unless explicitly enabled with `hydriQa=true`. Run them only on a dedicated QA emulator. UI tests snapshot and restore entries, bottles, goals and preferences; they do not reset the application. Upgrade testing compares the original records, all existing preference values, and derived badge statistics against a captured 1.2.1 baseline. No schema changes are needed for 1.2.2.
+Device tests are guarded and skip unless explicitly enabled with `hydriQa=true`. Run them only on a dedicated QA emulator. UI tests snapshot and restore entries, bottles, goals and preferences; they do not reset the application. Upgrade testing compares the original records, all existing preference values, and derived badge statistics against a baseline captured before updating (the legacy fixture filename is upgrade-1.2.1.json). Version 1.2.3 migrates schema 1 to 2 by adding nullable bottle ID/icon/color snapshots; existing records are preserved.
 
 To opt in for a single dedicated QA emulator, install the debug and Android-test APKs, then run:
 
@@ -111,6 +113,6 @@ See [1.2.2 verification](VERIFICATION-1.2.2.md) for current results, [1.2.1 veri
 
 ## Release status
 
-GitHub hosts the public source and versioned stable releases. APK binaries are attached to releases and excluded from source control. The stable APK retains the original local testing certificate for compatible updates; no signing keystore or credentials are stored in the repository. A production signing migration and the project's source license remain owner decisions. See [signing guidance](SIGNING.md) and [the licensing review](SECURITY-AND-LICENSING.md).
+GitHub hosts the public source and versioned stable releases. APK binaries are attached to releases and excluded from source control. The stable APK retains the original local testing certificate for compatible updates; no signing keystore or credentials are stored in the repository. A production signing migration remains an owner decision; the source license is Apache 2.0. See [signing guidance](SIGNING.md) and [the licensing review](SECURITY-AND-LICENSING.md).
 
 Windows builds can encounter a temporary Gradle transform-cache rename lock. Stop Gradle daemons and retry with --no-watch-fs and --max-workers=1. Do not disable antivirus protection or delete the signing keystore to resolve a cache problem.

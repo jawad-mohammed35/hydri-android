@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.domain
 
 object TabPosition {

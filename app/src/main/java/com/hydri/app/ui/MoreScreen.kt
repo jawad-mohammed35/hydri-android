@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import android.content.Intent
@@ -124,7 +127,7 @@ fun MoreScreen(
                 }
             }
         }
-    ScreenColumn(Modifier.testTag("settings-page-$page")) {
+    ScreenColumn(Modifier.testTag("settings-page-$page"), scrollKey = page) {
         if (page == "More") {
             PageHeader("More")
             GlassCard(Modifier.fillMaxWidth()) {
@@ -449,11 +452,25 @@ fun MoreScreen(
                     }
                     GlassCard(Modifier.fillMaxWidth()) {
                         Eyebrow("OPEN SOURCE")
+                        Text("Hydri — Apache License 2.0")
+                        Text("Copyright 2026 Jawad Mohammed")
+                        TextButton(
+                            onClick = {
+                                info =
+                                    "Protocol Buffers — BSD-3-Clause" to
+                                        context.assets
+                                            .open("Protobuf-BSD-3-Clause.txt")
+                                            .bufferedReader()
+                                            .use { it.readText() }
+                            }
+                        ) {
+                            Text("Protocol Buffers license")
+                        }
                         TextButton(
                             onClick = {
                                 info =
                                     "Open-source acknowledgments" to
-                                        "AndroidX: Compose, Material 3, Navigation, Room, DataStore, Lifecycle, WorkManager, Glance, Activity and Core — Apache License 2.0.\n\nKotlin and kotlinx.coroutines — Apache License 2.0.\n\nMaterial Icons — Apache License 2.0.\n\nJUnit — Eclipse Public License 1.0 (tests only).\n\nFull license texts and upstream links are included in the project's THIRD_PARTY_NOTICES.md and LICENSES directory.\n\nApache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0\n\nThese libraries are provided without warranties. Copyright belongs to their respective contributors."
+                                        "Hydri is licensed under Apache License 2.0. Copyright 2026 Jawad Mohammed. Use, modification and redistribution, including commercial use, are permitted under its terms.\n\nAndroidX: Compose, Material 3, Navigation, Room, DataStore, Lifecycle, WorkManager, Glance, Activity and Core — Apache License 2.0.\n\nKotlin and kotlinx.coroutines — Apache License 2.0.\n\nMaterial Icons — Apache License 2.0.\n\nJUnit — Eclipse Public License 1.0 (tests only).\n\nFull license texts and upstream links are included in the project's THIRD_PARTY_NOTICES.md and LICENSES directory.\n\nApache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0\n\nThese libraries are provided without warranties. Copyright belongs to their respective contributors."
                             }
                         ) {
                             Text("Libraries & licenses")

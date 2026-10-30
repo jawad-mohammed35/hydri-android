@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import android.provider.Settings as AndroidSettings
@@ -17,6 +20,7 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -49,6 +53,8 @@ val bottleNames =
     listOf("Glass", "Bottle", "Large bottle", "Tumbler", "Sports bottle", "Mug", "Custom container")
 val LocalReducedMotion = staticCompositionLocalOf { false }
 val LocalFloatingBarInset = staticCompositionLocalOf { 0.dp }
+val LocalTabScrollRequest =
+    staticCompositionLocalOf<kotlinx.coroutines.flow.SharedFlow<String>?> { null }
 
 @Composable
 fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
@@ -140,7 +146,21 @@ fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun ScreenColumn(
+    modifier: Modifier = Modifier,
+    scrollKey: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val scroll = rememberScrollState()
+    val request = LocalTabScrollRequest.current
+    val reduced = LocalReducedMotion.current
+    LaunchedEffect(request, reduced, scrollKey) {
+        request?.collect { tab ->
+            if (tab == scrollKey && scroll.value > 0) {
+                if (reduced) scroll.scrollTo(0) else scroll.animateScrollTo(0)
+            }
+        }
+    }
     val defaultBringIntoView = LocalBringIntoViewSpec.current
     val obscured =
         with(androidx.compose.ui.platform.LocalDensity.current) {
@@ -167,7 +187,8 @@ fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope
                 Modifier.widthIn(max = 760.dp)
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scroll)
+                    .testTag("page-scroll")
                     .padding(horizontal = 24.dp)
                     .padding(top = 20.dp, bottom = 20.dp + LocalFloatingBarInset.current),
                 verticalArrangement = Arrangement.spacedBy(22.dp),

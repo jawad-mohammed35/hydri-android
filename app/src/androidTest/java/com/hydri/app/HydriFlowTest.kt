@@ -239,7 +239,7 @@ class HydriFlowTest {
                 .performClick()
             rule.waitForIdle()
         }
-        text("Version 1.2.2").performScrollTo().assertIsDisplayed()
+        text("Version ${BuildConfig.VERSION_NAME}").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -319,9 +319,13 @@ class HydriFlowTest {
 
     @Test
     fun swipeUndoDailyUndoAndTodayReset() {
+        // Keep a second current-day sip after Undo; the persisted QA baseline can be from
+        // yesterday.
+        runBlocking { repo.log(250_000, "QA reset retained") }
         val past = runBlocking { repo.log(400_000, "QA past", LocalDate.now().minusDays(1)) }
         val entry = runBlocking { repo.log(350_000, "QA swipe") }
         val row = rule.onNodeWithTag("sip-${entry.id}")
+        await { rule.onAllNodesWithTag("sip-${entry.id}").fetchSemanticsNodes().isNotEmpty() }
         row.performScrollTo()
         rule.waitForIdle()
         row.performTouchInput { swipeLeft(durationMillis = 400) }

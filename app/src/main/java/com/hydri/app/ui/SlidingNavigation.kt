@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import androidx.compose.animation.core.*
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,7 +29,12 @@ import com.hydri.app.domain.TabPosition
 val primaryTabs = listOf("Home", "Bottles", "Tracker", "More")
 
 @Composable
-fun SlidingNavigation(selected: String, haptics: Boolean, onSelect: (String) -> Unit) {
+fun SlidingNavigation(
+    selected: String,
+    haptics: Boolean,
+    onReselect: () -> Unit = {},
+    onSelect: (String) -> Unit,
+) {
     val feedback = LocalHapticFeedback.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val current by rememberUpdatedState(selected)
@@ -140,7 +149,7 @@ fun SlidingNavigation(selected: String, haptics: Boolean, onSelect: (String) -> 
                                     interactionSource = interaction,
                                     indication = null,
                                     role = Role.Tab,
-                                    onClick = { choose(i) },
+                                    onClick = { if (active) onReselect() else choose(i) },
                                 )
                                 .semantics(mergeDescendants = true) { contentDescription = name }
                                 .padding(vertical = 10.dp),
@@ -148,8 +157,19 @@ fun SlidingNavigation(selected: String, haptics: Boolean, onSelect: (String) -> 
                             verticalArrangement = Arrangement.spacedBy(3.dp),
                         ) {
                             Icon(
-                                icons[i],
+                                if (active)
+                                    listOf(
+                                        Icons.Filled.Home,
+                                        Icons.Filled.WaterDrop,
+                                        Icons.Filled.CalendarMonth,
+                                        Icons.Filled.GridView,
+                                    )[i]
+                                else icons[i],
                                 null,
+                                modifier =
+                                    Modifier.testTag(
+                                        "tab-icon-$name-${if (active) "filled" else "outlined"}"
+                                    ),
                                 tint =
                                     if (active) tint else MaterialTheme.colorScheme.onSurfaceVariant,
                             )

@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import androidx.compose.foundation.*
@@ -28,7 +31,7 @@ fun BottlesScreen(
     onMove: (Bottle, Int) -> Unit,
     onDelete: (Bottle) -> Unit,
 ) {
-    ScreenColumn {
+    ScreenColumn(scrollKey = "Bottles") {
         PageHeader("Bottles")
         Button(onClick = { onEdit(null) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
             Icon(Icons.Outlined.Add, null)
@@ -100,7 +103,7 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
     val stats = state.statistics
     val s = state.settings
     val start = state.goals.minOfOrNull { it.date }?.let { LocalDate.parse(it) } ?: state.today
-    ScreenColumn {
+    ScreenColumn(scrollKey = "Tracker") {
         PageHeader("Tracker")
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             GlassCard(Modifier.weight(1f)) {

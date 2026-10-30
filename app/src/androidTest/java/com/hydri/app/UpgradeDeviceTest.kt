@@ -29,7 +29,11 @@ class UpgradeDeviceTest {
                 (0 until array.length())
                     .map { i ->
                         val row = array.getJSONObject(i)
-                        row.keys().asSequence().sorted().joinToString("|") { "$it=${row.get(it)}" }
+                        row.keys()
+                            .asSequence()
+                            .filter { !row.isNull(it) }
+                            .sorted()
+                            .joinToString("|") { "$it=${row.get(it)}" }
                     }
                     .sorted()
             }

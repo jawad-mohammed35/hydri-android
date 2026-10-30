@@ -2,9 +2,15 @@
 
 Reviewed October 29, 2026 (New York; October 30 UTC). This is a repository review and decision guide, not a legal opinion or a penetration-test certification.
 
-## Existing rights and licensing
+## Current license (October 30, 2026)
 
-There is **no LICENSE for Hydri's own code** in the current tree or reachable history. `THIRD_PARTY_NOTICES.md` explicitly says that no owner license has been selected. The Apache 2.0 and EPL files in `LICENSES/` and app assets cover dependencies; they do not automatically license Hydri. GitHub's license metadata is also empty.
+The owner has selected **Apache License 2.0** for Hydri. Root LICENSE contains the official unmodified text; NOTICE and source SPDX headers identify Copyright 2026 Jawad Mohammed. README and in-app About now agree. Copying, modification, commercial use and redistribution are permitted under its conditions. No general trademark grant or endorsement is implied. Third-party licenses remain unchanged. See [the adoption review](LICENSING-1.2.3.md). Signing identity and repository visibility are unchanged.
+
+The analysis below records the **historical 1.2.2 review before that decision**, not the current licensing status.
+
+## Historical rights and licensing review
+
+At the 1.2.2 review, there was **no LICENSE for Hydri's own code** in that tree or its then-reachable history. `THIRD_PARTY_NOTICES.md` explicitly says that no owner license has been selected. The Apache 2.0 and EPL files in `LICENSES/` and app assets cover dependencies; they do not automatically license Hydri. GitHub's license metadata was also empty at that time.
 
 [GitHub explains](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) that default copyright applies without a license. Public GitHub hosting nevertheless permits viewing and forking under GitHub's terms. Public visibility is not an open-source license or a technical barrier to copying; existing public copies cannot be recalled simply by changing future terms.
 
@@ -41,6 +47,6 @@ Proposed notice, **for approval after ownership review**: “Copyright © 2026 J
 
 No credential exposure was identified that establishes a need to rotate an account token or key. If an exposure is discovered later, rotate/revoke the affected secret; history cleanup alone is not sufficient. R8 obfuscation is not a substitute for key protection and cannot stop copying public code, so no risky obfuscation change was added solely as “protection.”
 
-## Decisions reserved for the owner
+## Historical decisions reserved for the owner (license now resolved)
 
-Choose the source/binary license, approve any copyright/branding policy, decide on trademark clearance/registration, and approve any future signing-identity migration. Those decisions are intentionally unresolved. Safe repository safeguards, documentation and UI work proceed independently.
+Choose the source/binary license, approve any copyright/branding policy, decide on trademark clearance/registration, and approve any future signing-identity migration. This was the decision list at 1.2.2. The owner has since selected Apache 2.0; trademark registration, separate branding policies and signing-identity migration remain future decisions.

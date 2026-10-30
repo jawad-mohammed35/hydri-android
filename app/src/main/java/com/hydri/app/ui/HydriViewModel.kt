@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import android.app.Application
@@ -82,9 +85,10 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
         name: String,
         date: LocalDate = LocalDate.now(),
         timestamp: Long = System.currentTimeMillis(),
+        bottle: Bottle? = null,
     ) = action {
         val before = repo.dao.allEntries().filter { it.date == date.toString() }.sumOf { it.volume }
-        val entry = repo.log(volume, name, date, timestamp)
+        val entry = repo.log(volume, name, date, timestamp, bottle)
         recentLogs.add(entry.id)
         if (
             date == LocalDate.now() &&

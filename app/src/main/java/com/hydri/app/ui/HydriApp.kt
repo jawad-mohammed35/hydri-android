@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.ui
 
 import android.Manifest
@@ -95,6 +98,9 @@ fun HydriApp(
             else if (!state.settings.onboarded) Onboarding(state, vm)
             else {
                 val nav = rememberNavController()
+                val scrollRequest = remember {
+                    kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
+                }
                 val backStack by nav.currentBackStackEntryAsState()
                 val route = backStack?.destination?.route ?: "Home"
                 fun openPrimary(name: String) {
@@ -135,7 +141,11 @@ fun HydriApp(
                     snackbarHost = { SnackbarHost(snackbar, Modifier.testTag("snackbar")) },
                     bottomBar = {
                         if (route in primaryTabs)
-                            SlidingNavigation(route, state.settings.haptics) { name ->
+                            SlidingNavigation(
+                                route,
+                                state.settings.haptics,
+                                onReselect = { scrollRequest.tryEmit(route) },
+                            ) { name ->
                                 openPrimary(name)
                             }
                     },
@@ -144,8 +154,9 @@ fun HydriApp(
                     val secondary =
                         setOf("Notifications", "Hydration Guide", "Data & Backup", "About")
                     CompositionLocalProvider(
+                        LocalTabScrollRequest provides scrollRequest,
                         LocalFloatingBarInset provides
-                            if (route in primaryTabs) padding.calculateBottomPadding() else 0.dp
+                            if (route in primaryTabs) padding.calculateBottomPadding() else 0.dp,
                     ) {
                         NavHost(
                             nav,
@@ -202,7 +213,7 @@ fun HydriApp(
                                             haptic.performHapticFeedback(
                                                 HapticFeedbackType.LongPress
                                             )
-                                        vm.log(b.volume, b.name)
+                                        vm.log(b.volume, b.name, bottle = b)
                                     },
                                     onCustom = {
                                         entryEditor = null

@@ -1,3 +1,6 @@
+// Copyright 2026 Jawad Mohammed
+// SPDX-License-Identifier: Apache-2.0
+
 package com.hydri.app.background
 
 import android.content.Context
@@ -315,7 +318,7 @@ class WidgetAdd : ActionCallback {
         val today = LocalDate.now()
         val before = repo.dao.entriesOn(today.toString()).first().sumOf { it.volume }
         val goal = Repository.goalFor(repo.dao.allGoals(), today)
-        repo.log(bottle.volume, bottle.name)
+        repo.log(bottle.volume, bottle.name, bottle = bottle)
         HydriWidgets.update(context)
         if (settings.goalNotification && before < goal && before + bottle.volume >= goal)
             Reminders.notify(context, "You've reached today's hydration goal!", 2, settings)

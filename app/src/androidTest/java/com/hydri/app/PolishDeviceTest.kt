@@ -110,6 +110,7 @@ class PolishDeviceTest {
             tap("Preferred name")
             rule.onNodeWithTag("preferred-name-input").assertTextContains(original)
             rule.onNodeWithTag("preferred-name-input").clearFloatingNavigation(rule).performClick()
+            Thread.sleep(500) // Let Android's IME resize settle before injecting replacement text.
             rule.onNodeWithTag("preferred-name-input").performTextReplacement("jAWad $index")
             rule.onNodeWithText("Save").assertIsDisplayed()
             capture("name-$index")
@@ -207,14 +208,14 @@ class PolishDeviceTest {
                 "Focused controls should clear the overlay",
                 notifications.getUnclippedBoundsInRoot().bottom <= bar.top,
             )
-            rule.onNodeWithText("Version 1.2.2").performScrollTo().assertIsDisplayed()
+            rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}").performScrollTo().assertIsDisplayed()
             // The viewport draws behind the overlay; scroll through the reserved end padding.
             rule.onNodeWithTag("page-viewport").performTouchInput {
                 swipeUp(startY = height * .6f, endY = height * .2f, durationMillis = 350)
             }
             assertTrue(
                 "Bottom content must remain reachable above the bar",
-                rule.onNodeWithText("Version 1.2.2").getUnclippedBoundsInRoot().bottom < bar.top,
+                rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}").getUnclippedBoundsInRoot().bottom < bar.top,
             )
         }
         capture("floating-navigation")

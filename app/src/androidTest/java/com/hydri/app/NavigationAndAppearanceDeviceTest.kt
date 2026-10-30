@@ -163,6 +163,9 @@ class NavigationAndAppearanceDeviceTest {
             .use { fd -> java.io.FileInputStream(fd.fileDescriptor).use { it.readBytes() } }
         await { rule.onAllNodesWithTag("settings-page-More").fetchSemanticsNodes().isNotEmpty() }
         tap("Notifications")
+        rule.onNodeWithTag("settings-page-Notifications").assertExists()
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        Thread.sleep(300) // Android's real input dispatcher is separate from the Compose test clock.
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
         await { rule.onAllNodesWithTag("settings-page-More").fetchSemanticsNodes().isNotEmpty() }
     }

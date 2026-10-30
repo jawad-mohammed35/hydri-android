@@ -50,12 +50,12 @@ Hydri uses Kotlin, Jetpack Compose, Material 3, Navigation, Room, DataStore, Wor
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.2.2 verification](docs/VERIFICATION-1.2.2.md) records the tested scope.
+See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.2.3 verification](docs/VERIFICATION-1.2.3.md) records the tested scope.
 
-Bug reports are welcome. Discuss code contributions with the maintainer while licensing is under review. Please use [private security reporting](https://github.com/jawad-mohammed35/hydri-android/security/advisories/new) for vulnerabilities and never attach credentials or personal backups to public issues.
+Bug reports and contributions are welcome. Discuss larger changes with the maintainer before starting. Contributions intentionally submitted for inclusion are under Apache 2.0 unless explicitly stated otherwise and agreed with the maintainer. Please use [private security reporting](https://github.com/jawad-mohammed35/hydri-android/security/advisories/new) for vulnerabilities and never attach credentials or personal backups to public issues.
 
 ## License and credits
 
-**Hydri's source licensing is under review. No license for Hydri's own code has been selected.** Public visibility does not make the project OSI open source. The Apache/EPL texts in `LICENSES/` cover third-party components, not an automatic license for Hydri. See the [licensing, copyright and security review](docs/SECURITY-AND-LICENSING.md) for the owner's pending decisions.
+Hydri is licensed under the [Apache License, Version 2.0](LICENSE). Copyright 2026 Jawad Mohammed. You may use, copy, modify and redistribute it, including commercially, subject to the license's conditions. The license does not grant general trademark rights or imply endorsement. Third-party components retain their own notices and licenses; see [NOTICE](NOTICE) and [third-party credits](THIRD_PARTY_NOTICES.md).
 
 Developed by **Jawad Mohammed**. Thanks to the AndroidX, Kotlin, Material Icons and other library contributors; their notices are preserved in [third-party credits](THIRD_PARTY_NOTICES.md). Hydration Guide references identify their original authorities and recommendation dates. No affiliation or endorsement is implied.
