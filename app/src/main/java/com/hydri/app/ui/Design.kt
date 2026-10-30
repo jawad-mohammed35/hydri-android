@@ -3,6 +3,8 @@ package com.hydri.app.ui
 import android.provider.Settings as AndroidSettings
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
@@ -137,18 +139,41 @@ fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = 760.dp)
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(top = 20.dp, bottom = 20.dp + LocalFloatingBarInset.current),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
-            content = content,
-        )
+    val defaultBringIntoView = LocalBringIntoViewSpec.current
+    val obscured =
+        with(androidx.compose.ui.platform.LocalDensity.current) {
+            LocalFloatingBarInset.current.toPx()
+        }
+    val bringIntoView =
+        remember(defaultBringIntoView, obscured) {
+            object : BringIntoViewSpec {
+                override fun calculateScrollDistance(
+                    offset: Float,
+                    size: Float,
+                    containerSize: Float,
+                ): Float =
+                    defaultBringIntoView.calculateScrollDistance(
+                        offset,
+                        size,
+                        (containerSize - obscured).coerceAtLeast(1f),
+                    )
+            }
+        }
+    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                Modifier.widthIn(max = 760.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 20.dp, bottom = 20.dp + LocalFloatingBarInset.current),
+                verticalArrangement = Arrangement.spacedBy(22.dp),
+                content = content,
+            )
+        }
     }
 }
 

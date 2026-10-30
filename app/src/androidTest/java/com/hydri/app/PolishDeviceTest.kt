@@ -109,6 +109,7 @@ class PolishDeviceTest {
             assertEquals(original, runBlocking { repo.preferences.flow.first().name })
             tap("Preferred name")
             rule.onNodeWithTag("preferred-name-input").assertTextContains(original)
+            rule.onNodeWithTag("preferred-name-input").performClick()
             rule.onNodeWithTag("preferred-name-input").performTextReplacement("jAWad $index")
             rule.onNodeWithText("Save").assertIsDisplayed()
             capture("name-$index")
@@ -191,6 +192,16 @@ class PolishDeviceTest {
             assertTrue(
                 "Content should draw behind the floating navigation",
                 viewport.bottom > bar.bottom,
+            )
+            val notifications = rule.onNodeWithText("Notifications")
+            notifications.performScrollTo()
+            InstrumentationRegistry.getInstrumentation()
+                .sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB)
+            notifications.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+            rule.waitForIdle()
+            assertTrue(
+                "Focused controls should clear the overlay",
+                notifications.getUnclippedBoundsInRoot().bottom <= bar.top,
             )
             rule.onNodeWithText("Version 1.2.2").performScrollTo().assertIsDisplayed()
             // The viewport draws behind the overlay; scroll through the reserved end padding.

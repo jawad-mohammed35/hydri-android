@@ -99,6 +99,18 @@ class HydriFlowTest {
 
     private fun entries() = runBlocking { repo.dao.allEntries() }
 
+    private fun exposeAboveNavigation(node: SemanticsNodeInteraction) {
+        node.performScrollTo()
+        if (
+            node.getUnclippedBoundsInRoot().bottom >
+                rule.onNodeWithTag("sliding-navigation").getUnclippedBoundsInRoot().top
+        ) {
+            rule.onNodeWithTag("page-viewport").performTouchInput {
+                swipeUp(startY = height * .6f, endY = height * .3f, durationMillis = 350)
+            }
+        }
+    }
+
     @Test
     fun onboardingFitsAndPreviewsTheme() {
         runBlocking {
@@ -335,7 +347,7 @@ class HydriFlowTest {
             rule.onNodeWithContentDescription(
                 "History ${formattedDate(LocalDate.parse(past.date),s.dateFormat)}"
             )
-        history.performScrollTo()
+        exposeAboveNavigation(history)
         text("QA history").assertDoesNotExist()
         history.performClick()
         text("QA history").performScrollTo().assertIsDisplayed()
@@ -346,7 +358,8 @@ class HydriFlowTest {
         await {
             entries().any { it.id == past.id && it.volume == 600_000L && it.date == past.date }
         }
-        history.performScrollTo().performClick()
+        exposeAboveNavigation(history)
+        history.performClick()
         text("QA history").assertDoesNotExist()
         text("Badges").performScrollTo().assertIsDisplayed()
         text("First Drop").performScrollTo().assertIsDisplayed()
