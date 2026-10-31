@@ -30,8 +30,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import com.hydri.app.LauncherShortcuts
+import com.hydri.app.R
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
+import com.hydri.app.i18n.*
 import java.time.*
 import kotlinx.coroutines.launch
 
@@ -59,7 +61,7 @@ fun HydriApp(
             if (!granted)
                 scope.launch {
                     snackbar.showSnackbar(
-                        "Notifications are blocked. Enable them in Android app settings to receive reminders."
+                        tr(R.string.notifications_are_blocked_enable_them_in_android_app_setti)
                     )
                 }
         }
@@ -80,7 +82,7 @@ fun HydriApp(
                 if (
                     snackbar.showSnackbar(
                         message,
-                        if (undoAction != null) "Undo" else null,
+                        if (undoAction != null) tr(R.string.undo) else null,
                         withDismissAction = true,
                         duration = SnackbarDuration.Short,
                     ) == SnackbarResult.ActionPerformed && undoAction != null
@@ -102,10 +104,11 @@ fun HydriApp(
                     kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
                 }
                 val backStack by nav.currentBackStackEntryAsState()
-                val route = backStack?.destination?.route ?: "Home"
+                val route = backStack?.destination?.route.orEmpty()
+                val selectedTab = primaryTabFor(backStack?.destination)
                 fun openPrimary(name: String) {
                     require(name in primaryTabs)
-                    nav.navigate(name) {
+                    nav.navigate(if (name == "More") "MoreSection" else name) {
                         popUpTo(nav.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
                         // Home is the root, never a restored stack that could contain another tab.
@@ -142,7 +145,7 @@ fun HydriApp(
                     bottomBar = {
                         if (route in primaryTabs)
                             SlidingNavigation(
-                                route,
+                                selectedTab ?: route,
                                 state.settings.haptics,
                                 onReselect = { scrollRequest.tryEmit(route) },
                             ) { name ->
@@ -170,7 +173,8 @@ fun HydriApp(
                                         if (route in primaryTabs) 0.dp
                                         else padding.calculateBottomPadding(),
                                 )
-                                .testTag("page-viewport"),
+                                .testTag("page-viewport")
+                                .semantics { this[PrimaryTabRoute] = selectedTab.orEmpty() },
                             enterTransition = {
                                 if (reduced) EnterTransition.None
                                 else if (targetState.destination.route in secondary)
@@ -241,10 +245,11 @@ fun HydriApp(
                                     vm::move,
                                     { b ->
                                         confirm =
-                                            "Delete ${b.name}? Saved water entries will stay in your history." to
-                                                {
-                                                    vm.deleteBottle(b)
-                                                }
+                                            tr(
+                                                R.string
+                                                    .delete_value_saved_water_entries_will_stay_in_your_history,
+                                                bottleDisplayName(b),
+                                            ) to { vm.deleteBottle(b) }
                                     },
                                 )
                             }
@@ -262,33 +267,35 @@ fun HydriApp(
                                     },
                                 )
                             }
-                            composable("More") {
-                                MoreScreen(
-                                    state,
-                                    vm,
-                                    ::requestNotifications,
-                                    { goalOpen = true },
-                                    { message, action -> confirm = message to action },
-                                    snackbar,
-                                    onNavigate = { nav.navigate(it) },
-                                )
-                            }
-                            listOf("Notifications", "Hydration Guide", "Data & Backup", "About")
-                                .forEach { page ->
-                                    composable(page) {
-                                        MoreScreen(
-                                            state,
-                                            vm,
-                                            ::requestNotifications,
-                                            { goalOpen = true },
-                                            { message, action -> confirm = message to action },
-                                            snackbar,
-                                            page = page,
-                                            onNavigate = { nav.navigate(it) },
-                                            onBack = { nav.popBackStack() },
-                                        )
-                                    }
+                            navigation(startDestination = "More", route = "MoreSection") {
+                                composable("More") {
+                                    MoreScreen(
+                                        state,
+                                        vm,
+                                        ::requestNotifications,
+                                        { goalOpen = true },
+                                        { message, action -> confirm = message to action },
+                                        snackbar,
+                                        onNavigate = { nav.navigate(it) },
+                                    )
                                 }
+                                listOf("Notifications", "Hydration Guide", "Data & Backup", "About")
+                                    .forEach { page ->
+                                        composable(page) {
+                                            MoreScreen(
+                                                state,
+                                                vm,
+                                                ::requestNotifications,
+                                                { goalOpen = true },
+                                                { message, action -> confirm = message to action },
+                                                snackbar,
+                                                page = page,
+                                                onNavigate = { nav.navigate(it) },
+                                                onBack = { nav.popBackStack() },
+                                            )
+                                        }
+                                    }
+                            }
                         }
                     }
                 }
@@ -329,7 +336,12 @@ fun HydriApp(
                                 )
                         if (targetTime == null) {
                             vm.action {
-                                error("The local date changed. Choose a valid time for today.")
+                                throw UserMessage(
+                                    tr(
+                                        R.string
+                                            .the_local_date_changed_choose_a_valid_time_for_today
+                                    )
+                                )
                             }
                             return@EntryDialog
                         }
@@ -350,10 +362,10 @@ fun HydriApp(
                 }
             if (goalOpen)
                 AmountDialog(
-                    "Daily water goal",
+                    tr(R.string.daily_water_goal),
                     state.goal(state.today),
                     state.settings.unit,
-                    "Changes apply from today. Earlier goals stay the same. General starting points are not medical advice.",
+                    tr(R.string.changes_apply_from_today_earlier_goals_stay_the_same_gener),
                     { goalOpen = false },
                 ) {
                     vm.goal(it)
@@ -361,8 +373,8 @@ fun HydriApp(
                 }
             if (resetTodayOpen)
                 GlassDialog(
-                    "Reset today's intake?",
-                    "Reset",
+                    tr(R.string.reset_today_s_intake),
+                    tr(R.string.reset),
                     { resetTodayOpen = false },
                     {
                         vm.resetToday()
@@ -371,14 +383,14 @@ fun HydriApp(
                     destructive = true,
                 ) {
                     Text(
-                        "This removes all of today's logged water entries. Other days, bottles and preferences are kept.",
+                        tr(R.string.this_removes_all_of_today_s_logged_water_entries_other_day),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             confirm?.let { (message, action) ->
                 GlassDialog(
-                    title = "Please confirm",
-                    confirmLabel = "Confirm",
+                    title = tr(R.string.please_confirm),
+                    confirmLabel = tr(R.string.confirm),
                     onDismiss = { confirm = null },
                     onConfirm = {
                         confirm = null
@@ -419,7 +431,14 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
     var customText by rememberSaveable { mutableStateOf(Volume.input(selectedGoal, s.unit)) }
     val keyboard = LocalSoftwareKeyboardController.current
     val goal = if (custom) Volume.parse(customText, s.unit) else selectedGoal
-    val titles = listOf("Hydri", "Your name", "Appearance", "Measurements", "Daily goal")
+    val titles =
+        listOf(
+            "Hydri",
+            tr(R.string.your_name),
+            tr(R.string.appearance),
+            tr(R.string.measurements),
+            tr(R.string.daily_goal),
+        )
     HydriTheme(s) {
         Scaffold(
             modifier = Modifier.imePadding().testTag("onboarding"),
@@ -455,7 +474,7 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                                     page--
                                 }
                             ) {
-                                Text("Back")
+                                Text(tr(R.string.back))
                             }
                         Button(
                             onClick = {
@@ -475,8 +494,9 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                             modifier = Modifier.weight(1f).height(48.dp),
                         ) {
                             Text(
-                                if (page == 0) "Get started"
-                                else if (page == 4) "Done" else "Continue"
+                                if (page == 0) tr(R.string.get_started)
+                                else if (page == 4) tr(R.string.done)
+                                else tr(R.string.continue_action)
                             )
                         }
                     }
@@ -496,23 +516,26 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                     when (page) {
                         0 -> {
                             Text(
-                                "Track water and set a daily goal. Everything stays on your device."
+                                tr(
+                                    R.string
+                                        .track_water_and_set_a_daily_goal_everything_stays_on_your
+                                )
                             )
                             Text(
-                                "No account. No ads.",
+                                tr(R.string.no_account_no_ads),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         1 -> {
                             Text(
-                                "A first name or nickname is fine.",
+                                tr(R.string.a_first_name_or_nickname_is_fine),
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             OutlinedTextField(
                                 s.name,
                                 { s = s.copy(name = it.take(60)) },
-                                label = { Text("Name (optional)") },
+                                label = { Text(tr(R.string.name_optional)) },
                                 singleLine = true,
                                 shape = RoundedCornerShape(18.dp),
                                 modifier = Modifier.fillMaxWidth(),
@@ -534,24 +557,28 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                         }
                         2 -> {
                             listOf(
-                                    "System" to "Follow system",
-                                    "Light" to "Light",
-                                    "Dark" to "Dark",
+                                    "System" to tr(R.string.follow_system),
+                                    "Light" to tr(R.string.light),
+                                    "Dark" to tr(R.string.dark),
                                 )
                                 .forEach { (value, label) ->
                                     SelectionCard(label, s.theme == value) {
                                         s = s.copy(theme = value)
                                     }
                                 }
-                            SettingToggle("OLED pure black", "Used with the dark theme", s.oled) {
+                            SettingToggle(
+                                tr(R.string.oled_pure_black),
+                                tr(R.string.used_with_the_dark_theme),
+                                s.oled,
+                            ) {
                                 s = s.copy(oled = it)
                             }
                         }
                         3 -> {
                             listOf(
-                                    "mL" to "Millilitres (mL)",
-                                    "L" to "Litres (L)",
-                                    "oz" to "US fluid ounces (oz)",
+                                    "mL" to tr(R.string.millilitres_ml),
+                                    "L" to tr(R.string.litres_l),
+                                    "oz" to tr(R.string.us_fluid_ounces_oz),
                                 )
                                 .forEach { (unit, label) ->
                                     SelectionCard(label, s.unit == unit) {
@@ -566,7 +593,9 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                         }
                         4 -> {
                             Text(
-                                "General starting points, not personalized medical advice.",
+                                tr(
+                                    R.string.general_starting_points_not_personalized_medical_advice
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -579,7 +608,7 @@ fun Onboarding(state: UiState, vm: HydriViewModel) {
                                     custom = false
                                 }
                             }
-                            SelectionCard("Custom", custom) {
+                            SelectionCard(tr(R.string.custom), custom) {
                                 custom = true
                                 customText = Volume.input(selectedGoal, s.unit)
                             }
@@ -626,13 +655,13 @@ fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
     OutlinedTextField(
         text,
         onChange,
-        label = { Text("Amount ($unit)") },
+        label = { Text(tr(R.string.amount_value, unitLabel(unit))) },
         singleLine = true,
         shape = RoundedCornerShape(18.dp),
         isError = text.isNotBlank() && Volume.parse(text, unit) == null,
         supportingText = {
             if (text.isNotBlank() && Volume.parse(text, unit) == null)
-                Text("Enter an amount from 1 to 20,000 mL (or equivalent).")
+                Text(tr(R.string.enter_an_amount_from_1_to_20_000_ml_or_equivalent))
         },
         keyboardOptions =
             androidx.compose.foundation.text.KeyboardOptions(

@@ -1,0 +1,9 @@
+
+com.hydri.app.IndicatorReturnDeviceTest:..
+com.hydri.app.LanguageDeviceTest:...
+
+Time: 290.013
+
+OK (5 tests)
+
+

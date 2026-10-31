@@ -20,6 +20,8 @@ A native Android water tracker with quick logging, useful history and a quiet Li
 
 The floating navigation bar supports taps and sliding gestures, with optional haptics and reduced-motion settings. Dialogs share rounded glass surfaces and adapt to your theme.
 
+Hydri supports **English, Español, Français, 简体中文, 한국어, 日本語 and Bahasa Indonesia**. Choose a language or Follow System in **More → Settings → Language**, or through Android 13+ per-app language settings. Translations are bundled offline; changing languages preserves your records and measurement preferences.
+
 ## Screenshots
 
 Real Android emulator captures using sample data:
@@ -28,7 +30,7 @@ Real Android emulator captures using sample data:
 
 ## Download and install
 
-1. Open [the stable release](https://github.com/jawad-mohammed35/hydri-android/releases/latest) on your phone and download **Hydri-1.2.2.apk** from Assets.
+1. Open [the stable release](https://github.com/jawad-mohammed35/hydri-android/releases/latest) on your phone and download **Hydri-1.3.0.apk** from Assets.
 2. Open the APK. If Android asks, allow your browser or file manager to install apps, then choose **Install**.
 3. Open Hydri. Existing users should install over the current app **without uninstalling**, so records and preferences stay intact.
 
@@ -50,7 +52,7 @@ Hydri uses Kotlin, Jetpack Compose, Material 3, Navigation, Room, DataStore, Wor
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.2.3 verification](docs/VERIFICATION-1.2.3.md) records the tested scope.
+See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.3.0 verification](docs/VERIFICATION-1.3.0.md) records the tested scope.
 
 Bug reports and contributions are welcome. Discuss larger changes with the maintainer before starting. Contributions intentionally submitted for inclusion are under Apache 2.0 unless explicitly stated otherwise and agreed with the maintainer. Please use [private security reporting](https://github.com/jawad-mohammed35/hydri-android/security/advisories/new) for vulnerabilities and never attach credentials or personal backups to public issues.
 
@@ -59,3 +61,5 @@ Bug reports and contributions are welcome. Discuss larger changes with the maint
 Hydri is licensed under the [Apache License, Version 2.0](LICENSE). Copyright 2026 Jawad Mohammed. You may use, copy, modify and redistribute it, including commercially, subject to the license's conditions. The license does not grant general trademark rights or imply endorsement. Third-party components retain their own notices and licenses; see [NOTICE](NOTICE) and [third-party credits](THIRD_PARTY_NOTICES.md).
 
 Developed by **Jawad Mohammed**. Thanks to the AndroidX, Kotlin, Material Icons and other library contributors; their notices are preserved in [third-party credits](THIRD_PARTY_NOTICES.md). Hydration Guide references identify their original authorities and recommendation dates. No affiliation or endorsement is implied.
+
+For licensing before v1.2.3, see [the historical licensing review](docs/LEGACY-LICENSING.md).

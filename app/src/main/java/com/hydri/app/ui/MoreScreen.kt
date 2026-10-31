@@ -19,16 +19,19 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hydri.app.BuildConfig
+import com.hydri.app.R
 import com.hydri.app.background.Reminders
 import com.hydri.app.data.Settings
+import com.hydri.app.i18n.*
 import java.time.*
-import java.util.Locale
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 
 /** Replace these values when the developer elects to publish contact details. */
 object DeveloperInfo {
-    const val name = "Developed by Jawad Mohammed"
+    val name
+        get() = tr(R.string.developed_by_jawad_mohammed)
+
     const val linkedin = "https://www.linkedin.com/in/jawad-mohammed01"
     const val website = ""
     const val github = ""
@@ -48,6 +51,7 @@ fun MoreScreen(
     onBack: () -> Unit = {},
 ) {
     val s = state.settings
+    val appLanguage by AppLocales.selection.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var editName by remember { mutableStateOf(false) }
@@ -68,9 +72,9 @@ fun MoreScreen(
                             .openOutputStream(uri, "wt")
                             ?.bufferedWriter(Charsets.UTF_8)
                             ?.use { it.write(vm.repo.csv()) }
-                            ?: error("Cannot open the export location.")
+                            ?: throw UserMessage(tr(R.string.cannot_open_the_export_location))
                     }
-                    vm.messages.emit("CSV exported" to null)
+                    vm.messages.emit(tr(R.string.csv_exported) to null)
                 }
         }
     val backup =
@@ -84,17 +88,15 @@ fun MoreScreen(
                             .openOutputStream(uri, "wt")
                             ?.bufferedWriter(Charsets.UTF_8)
                             ?.use { it.write(vm.repo.backup()) }
-                            ?: error("Cannot open the backup location.")
+                            ?: throw UserMessage(tr(R.string.cannot_open_the_backup_location))
                     }
-                    vm.messages.emit("Local backup saved" to null)
+                    vm.messages.emit(tr(R.string.local_backup_saved) to null)
                 }
         }
     val restore =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
-                onConfirm(
-                    "Replace all current records, bottles and preferences with this backup? This cannot be undone. Create a backup first if you want to keep your current data."
-                ) {
+                onConfirm(tr(R.string.replace_all_current_records_bottles_and_preferences_with_t)) {
                     busy = true
                     vm.action {
                         try {
@@ -109,17 +111,26 @@ fun MoreScreen(
                                             var count = reader.read(buffer)
                                             while (count != -1) {
                                                 result.append(buffer, 0, count)
-                                                require(result.length <= 10_000_000) {
-                                                    "Backup exceeds 10 MB."
-                                                }
+                                                if (result.length > 10_000_000)
+                                                    throw UserMessage(
+                                                        tr(R.string.backup_exceeds_10_mb)
+                                                    )
                                                 count = reader.read(buffer)
                                             }
                                             result.toString()
-                                        } ?: error("Cannot open this backup.")
-                                vm.repo.restore(text)
+                                        } ?: throw UserMessage(tr(R.string.cannot_open_this_backup))
+                                try {
+                                    vm.repo.restore(text)
+                                } catch (e: UserMessage) {
+                                    throw e
+                                } catch (_: org.json.JSONException) {
+                                    throw UserMessage(tr(R.string.invalid_backup))
+                                } catch (_: IllegalArgumentException) {
+                                    throw UserMessage(tr(R.string.invalid_backup))
+                                }
                             }
                             Reminders.schedule(context, vm.repo.preferences.flow.first())
-                            vm.messages.emit("Backup restored" to null)
+                            vm.messages.emit(tr(R.string.backup_restored) to null)
                         } finally {
                             busy = false
                         }
@@ -129,10 +140,10 @@ fun MoreScreen(
         }
     ScreenColumn(Modifier.testTag("settings-page-$page"), scrollKey = page) {
         if (page == "More") {
-            PageHeader("More")
+            PageHeader(tr(R.string.more))
             GlassCard(Modifier.fillMaxWidth()) {
                 Text(
-                    "PERSONALIZATION",
+                    tr(R.string.personalization),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -147,9 +158,9 @@ fun MoreScreen(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                 ) {
-                    Text("Preferred name", Modifier.weight(1f))
+                    Text(tr(R.string.preferred_name), Modifier.weight(1f))
                     Text(
-                        s.name.ifBlank { "Add a name" },
+                        s.name.ifBlank { tr(R.string.add_a_name) },
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -160,7 +171,7 @@ fun MoreScreen(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                 ) {
-                    Text("Daily hydration goal")
+                    Text(tr(R.string.daily_hydration_goal))
                 }
                 TextButton(
                     onClick = { reviewPreferences = true },
@@ -169,80 +180,95 @@ fun MoreScreen(
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
                 ) {
-                    Text("Review onboarding preferences")
+                    Text(tr(R.string.review_onboarding_preferences))
                 }
             }
             GlassCard(Modifier.fillMaxWidth()) {
-                Eyebrow("APPEARANCE")
-                SettingMenu("Theme", s.theme, listOf("System", "Light", "Dark")) {
+                Eyebrow(tr(R.string.appearance_152))
+                SettingMenu(tr(R.string.theme), s.theme, listOf("System", "Light", "Dark")) {
                     save { latest -> latest.copy(theme = it) }
                 }
                 SettingToggle(
-                    "OLED pure black",
-                    "Applies whenever the dark theme is active",
+                    tr(R.string.oled_pure_black),
+                    tr(R.string.applies_whenever_the_dark_theme_is_active),
                     s.oled,
                 ) {
                     save { latest -> latest.copy(oled = it) }
                 }
                 Text(
-                    if (s.dynamicColors) "Accent · Match Device Colors"
-                    else "Accent color · ${accentNames[s.accent]}",
+                    if (s.dynamicColors) tr(R.string.accent_match_device_colors)
+                    else tr(R.string.accent_color_value, accentNames[s.accent]),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 AccentPicker(if (s.dynamicColors) -1 else s.accent) {
                     save { latest -> latest.copy(accent = it, dynamicColors = false) }
                 }
-                Choice("Match Device Colors", s.dynamicColors) {
+                Choice(tr(R.string.match_device_colors), s.dynamicColors) {
                     save { latest -> latest.copy(dynamicColors = true) }
                 }
-                SettingToggle("Reduce animations", value = s.reducedMotion) {
+                SettingToggle(tr(R.string.reduce_animations), value = s.reducedMotion) {
                     save { latest -> latest.copy(reducedMotion = it) }
                 }
-                SettingToggle("Haptic feedback", value = s.haptics) {
+                SettingToggle(tr(R.string.haptic_feedback), value = s.haptics) {
                     save { latest -> latest.copy(haptics = it) }
                 }
             }
             GlassCard(Modifier.fillMaxWidth()) {
-                Eyebrow("MEASUREMENTS & FORMATS")
+                Eyebrow(tr(R.string.settings))
+                // Native locale APIs recreate the activity with its saved navigation state.
                 SettingMenu(
-                    "Water units",
+                    tr(R.string.language),
+                    appLanguage,
+                    listOf("") + AppLocales.languages.keys,
+                    label = AppLocales::label,
+                ) {
+                    AppLocales.select(it)
+                }
+                SettingMenu(
+                    tr(R.string.water_units),
                     s.unit,
                     listOf("mL", "L", "oz"),
                     label = {
                         when (it) {
-                            "oz" -> "US fl oz"
-                            else -> it
+                            "oz" -> tr(R.string.us_fl_oz)
+                            else -> unitLabel(it)
                         }
                     },
                 ) {
                     save { latest -> latest.copy(unit = it) }
                 }
                 SettingMenu(
-                    "Date format",
+                    tr(R.string.date_format),
                     s.dateFormat,
                     listOf("System", "MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"),
                 ) {
                     save { latest -> latest.copy(dateFormat = it) }
                 }
-                SettingMenu("Time format", s.timeFormat, listOf("System", "12-hour", "24-hour")) {
+                SettingMenu(
+                    tr(R.string.time_format),
+                    s.timeFormat,
+                    listOf("System", "12-hour", "24-hour"),
+                ) {
                     save { latest -> latest.copy(timeFormat = it) }
                 }
                 Text(
-                    "Changing units changes only the display. Your original amounts stay precise.",
+                    tr(R.string.changing_units_changes_only_the_display_your_original_amou),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             GlassCard(Modifier.fillMaxWidth()) {
-                SettingsLink("Notifications", Icons.Outlined.Notifications) {
+                SettingsLink(tr(R.string.notifications), Icons.Outlined.Notifications) {
                     onNavigate("Notifications")
                 }
-                SettingsLink("Hydration Guide", Icons.Outlined.Info) {
+                SettingsLink(tr(R.string.hydration_guide), Icons.Outlined.Info) {
                     onNavigate("Hydration Guide")
                 }
-                SettingsLink("Data & Backup", Icons.Outlined.Backup) { onNavigate("Data & Backup") }
-                SettingsLink("About", Icons.Outlined.Info) { onNavigate("About") }
+                SettingsLink(tr(R.string.data_backup), Icons.Outlined.Backup) {
+                    onNavigate("Data & Backup")
+                }
+                SettingsLink(tr(R.string.about), Icons.Outlined.Info) { onNavigate("About") }
             }
             Column(
                 Modifier.fillMaxWidth().padding(vertical = 18.dp),
@@ -252,40 +278,42 @@ fun MoreScreen(
                 Symbol(Icons.Outlined.WaterDrop)
                 Text("Hydri", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "Version ${BuildConfig.VERSION_NAME}",
+                    tr(R.string.version_value, BuildConfig.VERSION_NAME),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.Outlined.ArrowBack, "Back to More") }
-                Text(page, style = MaterialTheme.typography.headlineMedium)
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Outlined.ArrowBack, tr(R.string.back_to_more))
+                }
+                Text(routeLabel(page), style = MaterialTheme.typography.headlineMedium)
             }
             when (page) {
                 "Notifications" -> {
                     GlassCard(Modifier.fillMaxWidth()) {
-                        Eyebrow("REMINDERS")
-                        SettingToggle("Hydration reminders", value = s.reminders) {
+                        Eyebrow(tr(R.string.reminders))
+                        SettingToggle(tr(R.string.hydration_reminders), value = s.reminders) {
                             save { latest -> latest.copy(reminders = it) }
                             if (it) requestNotifications()
                         }
                         if (s.reminders) {
                             SettingMenu(
-                                "Frequency",
+                                tr(R.string.frequency),
                                 s.frequency,
                                 listOf(30, 60, 90, 120, 180, 240),
-                                label = { "$it min" },
+                                label = { tr(R.string.value_min, it) },
                             ) {
                                 save { latest -> latest.copy(frequency = it) }
                             }
-                            TimeSetting("Active hours start", s.start, s) {
+                            TimeSetting(tr(R.string.active_hours_start), s.start, s) {
                                 save { latest -> latest.copy(start = it) }
                             }
-                            TimeSetting("Active hours end", s.end, s) {
+                            TimeSetting(tr(R.string.active_hours_end), s.end, s) {
                                 save { latest -> latest.copy(end = it) }
                             }
-                            Text("Reminder days", fontWeight = FontWeight.Medium)
+                            Text(tr(R.string.reminder_days), fontWeight = FontWeight.Medium)
                             Row(
                                 Modifier.horizontalScroll(rememberScrollState()),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -295,7 +323,7 @@ fun MoreScreen(
                                         DayOfWeek.of(day)
                                             .getDisplayName(
                                                 java.time.format.TextStyle.SHORT,
-                                                Locale.getDefault(),
+                                                AppText.locale,
                                             ),
                                         day in s.days,
                                     ) {
@@ -309,36 +337,45 @@ fun MoreScreen(
                                     }
                                 }
                             }
-                            SettingToggle("Quiet hours", value = s.quiet) {
+                            SettingToggle(tr(R.string.quiet_hours), value = s.quiet) {
                                 save { latest -> latest.copy(quiet = it) }
                             }
                             if (s.quiet) {
-                                TimeSetting("Quiet hours start", s.quietStart, s) {
+                                TimeSetting(tr(R.string.quiet_hours_start), s.quietStart, s) {
                                     save { latest -> latest.copy(quietStart = it) }
                                 }
-                                TimeSetting("Quiet hours end", s.quietEnd, s) {
+                                TimeSetting(tr(R.string.quiet_hours_end), s.quietEnd, s) {
                                     save { latest -> latest.copy(quietEnd = it) }
                                 }
                             }
-                            SettingToggle("Stop after reaching goal", value = s.stopAtGoal) {
+                            SettingToggle(
+                                tr(R.string.stop_after_reaching_goal),
+                                value = s.stopAtGoal,
+                            ) {
                                 save { latest -> latest.copy(stopAtGoal = it) }
                             }
                             SettingToggle(
-                                "Evening check-in",
-                                "Around 20:00 if below goal; respects active and quiet hours",
+                                tr(R.string.evening_check_in),
+                                tr(
+                                    R.string
+                                        .around_20_00_if_below_goal_respects_active_and_quiet_hours
+                                ),
                                 s.evening,
                             ) {
                                 save { latest -> latest.copy(evening = it) }
                             }
                         }
-                        SettingToggle("Goal completion notification", value = s.goalNotification) {
+                        SettingToggle(
+                            tr(R.string.goal_completion_notification),
+                            value = s.goalNotification,
+                        ) {
                             save { latest -> latest.copy(goalNotification = it) }
                             if (it) requestNotifications()
                         }
-                        SettingToggle("Notification sound", value = s.sound) {
+                        SettingToggle(tr(R.string.notification_sound), value = s.sound) {
                             save { latest -> latest.copy(sound = it) }
                         }
-                        SettingToggle("Notification vibration", value = s.vibration) {
+                        SettingToggle(tr(R.string.notification_vibration), value = s.vibration) {
                             save { latest -> latest.copy(vibration = it) }
                         }
                         TextButton(
@@ -352,10 +389,10 @@ fun MoreScreen(
                                 )
                             }
                         ) {
-                            Text("Android notification settings")
+                            Text(tr(R.string.android_notification_settings))
                         }
                         Text(
-                            "Reminders are approximate and may be delayed by Android battery restrictions. Matching start and end times mean all day. Quiet hours take priority; no selected days means no reminders. Android channel settings can override sound and vibration.",
+                            tr(R.string.reminders_are_approximate_and_may_be_delayed_by_android_ba),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -366,22 +403,20 @@ fun MoreScreen(
                 }
                 "Data & Backup" -> {
                     GlassCard(Modifier.fillMaxWidth()) {
-                        Eyebrow("YOUR DATA, YOUR DEVICE")
-                        Text(
-                            "Hydri works entirely offline. No accounts, ads, analytics or uploads. Exports and backups are saved only where you choose. Files contain your hydration history and preferences; keep them somewhere private."
-                        )
+                        Eyebrow(tr(R.string.your_data_your_device))
+                        Text(tr(R.string.hydri_works_entirely_offline_no_accounts_ads_analytics_or))
                         TextButton(
                             onClick = { export.launch("hydri-history-${state.today}.csv") },
                             enabled = !busy,
                         ) {
                             Icon(Icons.Outlined.FileDownload, null)
-                            Text("Export history to CSV")
+                            Text(tr(R.string.export_history_to_csv))
                         }
                         TextButton(
                             onClick = { backup.launch("hydri-backup-${state.today}.json") },
                             enabled = !busy,
                         ) {
-                            Text("Create local backup")
+                            Text(tr(R.string.create_local_backup))
                         }
                         TextButton(
                             onClick = {
@@ -395,29 +430,38 @@ fun MoreScreen(
                             },
                             enabled = !busy,
                         ) {
-                            Text(if (busy) "Restoring…" else "Restore local backup")
+                            Text(
+                                if (busy) tr(R.string.restoring)
+                                else tr(R.string.restore_local_backup)
+                            )
                         }
                         TextButton(
                             onClick = {
                                 onConfirm(
-                                    "Permanently delete all water history? Bottles and preferences will be kept. Achievements will be recalculated."
+                                    tr(
+                                        R.string
+                                            .permanently_delete_all_water_history_bottles_and_preferenc
+                                    )
                                 ) {
                                     vm.action {
                                         vm.repo.deleteHistory()
-                                        vm.messages.emit("History deleted" to null)
+                                        vm.messages.emit(tr(R.string.history_deleted) to null)
                                     }
                                 }
                             }
                         ) {
                             Text(
-                                "Delete hydration history",
+                                tr(R.string.delete_hydration_history),
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
                         TextButton(
                             onClick = {
                                 onConfirm(
-                                    "Reset Hydri and permanently delete all local water entries, bottles, goals and preferences? This cannot be undone."
+                                    tr(
+                                        R.string
+                                            .reset_hydri_and_permanently_delete_all_local_water_entries
+                                    )
                                 ) {
                                     vm.action {
                                         vm.repo.reset()
@@ -426,13 +470,16 @@ fun MoreScreen(
                                 }
                             }
                         ) {
-                            Text("Reset all app data", color = MaterialTheme.colorScheme.error)
+                            Text(
+                                tr(R.string.reset_all_app_data),
+                                color = MaterialTheme.colorScheme.error,
+                            )
                         }
                     }
                 }
                 "About" -> {
                     GlassCard(Modifier.fillMaxWidth()) {
-                        Eyebrow("ABOUT THE DEVELOPER")
+                        Eyebrow(tr(R.string.about_the_developer))
                         Text(DeveloperInfo.name)
                         TextButton(
                             onClick = {
@@ -451,29 +498,32 @@ fun MoreScreen(
                             .forEach { Text(it) }
                     }
                     GlassCard(Modifier.fillMaxWidth()) {
-                        Eyebrow("OPEN SOURCE")
-                        Text("Hydri — Apache License 2.0")
-                        Text("Copyright 2026 Jawad Mohammed")
+                        Eyebrow(tr(R.string.open_source))
+                        Text(tr(R.string.hydri_apache_license_2_0))
+                        Text(tr(R.string.copyright_2026_jawad_mohammed))
                         TextButton(
                             onClick = {
                                 info =
-                                    "Protocol Buffers — BSD-3-Clause" to
+                                    tr(R.string.protocol_buffers_bsd_3_clause) to
                                         context.assets
                                             .open("Protobuf-BSD-3-Clause.txt")
                                             .bufferedReader()
                                             .use { it.readText() }
                             }
                         ) {
-                            Text("Protocol Buffers license")
+                            Text(tr(R.string.protocol_buffers_license))
                         }
                         TextButton(
                             onClick = {
                                 info =
-                                    "Open-source acknowledgments" to
-                                        "Hydri is licensed under Apache License 2.0. Copyright 2026 Jawad Mohammed. Use, modification and redistribution, including commercial use, are permitted under its terms.\n\nAndroidX: Compose, Material 3, Navigation, Room, DataStore, Lifecycle, WorkManager, Glance, Activity and Core — Apache License 2.0.\n\nKotlin and kotlinx.coroutines — Apache License 2.0.\n\nMaterial Icons — Apache License 2.0.\n\nJUnit — Eclipse Public License 1.0 (tests only).\n\nFull license texts and upstream links are included in the project's THIRD_PARTY_NOTICES.md and LICENSES directory.\n\nApache License 2.0\nhttps://www.apache.org/licenses/LICENSE-2.0\n\nThese libraries are provided without warranties. Copyright belongs to their respective contributors."
+                                    tr(R.string.open_source_acknowledgments) to
+                                        tr(
+                                            R.string
+                                                .hydri_apache_license_2_0_copyright_2026_jawad_mohammed_n_n
+                                        )
                             }
                         ) {
-                            Text("Libraries & licenses")
+                            Text(tr(R.string.libraries_licenses))
                         }
                         TextButton(
                             onClick = {
@@ -484,7 +534,7 @@ fun MoreScreen(
                                         }
                             }
                         ) {
-                            Text("Full Apache license")
+                            Text(tr(R.string.full_apache_license))
                         }
                         TextButton(
                             onClick = {
@@ -500,7 +550,7 @@ fun MoreScreen(
                                             .toString()
                             }
                         ) {
-                            Text("Full EPL license (test tooling)")
+                            Text(tr(R.string.full_epl_license_test_tooling))
                         }
                     }
                 }
@@ -509,8 +559,8 @@ fun MoreScreen(
     }
     if (reviewPreferences)
         GlassDialog(
-            "Review preferences",
-            "Review",
+            tr(R.string.review_preferences),
+            tr(R.string.review),
             { reviewPreferences = false },
             {
                 save { latest -> latest.copy(onboarded = false) }
@@ -518,14 +568,14 @@ fun MoreScreen(
             },
         ) {
             Text(
-                "Review your name, appearance, units and daily goal in the setup flow. Your water history and bottles are kept.",
+                tr(R.string.review_your_name_appearance_units_and_daily_goal_in_the_se),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     if (editName)
         GlassDialog(
-            "Preferred name",
-            "Save",
+            tr(R.string.preferred_name),
+            tr(R.string.save),
             { editName = false },
             {
                 save { latest -> latest.copy(name = name.trim()) }
@@ -535,7 +585,7 @@ fun MoreScreen(
             OutlinedTextField(
                 name,
                 { name = it.take(60) },
-                label = { Text("Preferred name") },
+                label = { Text(tr(R.string.preferred_name)) },
                 singleLine = true,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
                 modifier = Modifier.fillMaxWidth().testTag("preferred-name-input"),
@@ -546,13 +596,22 @@ fun MoreScreen(
             )
         }
     info?.let { (title, text) ->
+        val originalLicense =
+            title == "Apache License 2.0" ||
+                title == "Eclipse Public License 1.0" ||
+                title == tr(R.string.protocol_buffers_bsd_3_clause)
+        val displayText =
+            if (originalLicense) tr(R.string.source_license_english) + "\n\n" + text else text
         AlertDialog(
             onDismissRequest = { info = null },
             title = { Text(title) },
             text = {
-                Text(text, Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()))
+                Text(
+                    displayText,
+                    Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()),
+                )
             },
-            confirmButton = { TextButton(onClick = { info = null }) { Text("Done") } },
+            confirmButton = { TextButton(onClick = { info = null }) { Text(tr(R.string.done)) } },
         )
     }
 }

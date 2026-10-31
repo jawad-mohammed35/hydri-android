@@ -1,0 +1,8 @@
+
+com.hydri.app.LocaleRestartProbeTest:.
+
+Time: 6.592
+
+OK (1 test)
+
+

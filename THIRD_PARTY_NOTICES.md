@@ -2,7 +2,7 @@
 
 Hydri uses the following open-source projects. Copyright remains with each project's contributors. Versions are pinned in `app/build.gradle.kts`; Gradle resolves their transitive dependencies. No analytics or network client is included by Hydri.
 
-- AndroidX Activity 1.9.3, Core 1.15.0, Compose BOM 2025.01.00 (UI, foundation, animation, Material, Material 3), Lifecycle 2.8.7, Navigation 2.8.5, Room 2.7.2, DataStore 1.1.1, WorkManager 2.10.0, Glance 1.1.1 — The Android Open Source Project, Apache License 2.0. https://android.googlesource.com/platform/frameworks/support/
+- AndroidX AppCompat 1.7.1, Activity 1.9.3, Core 1.15.0, Compose BOM 2025.01.00 (UI, foundation, animation, Material, Material 3), Lifecycle 2.8.7, Navigation 2.8.5, Room 2.7.2, DataStore 1.1.1, WorkManager 2.10.0, Glance 1.1.1 — The Android Open Source Project, Apache License 2.0. https://android.googlesource.com/platform/frameworks/support/
 - Material Icons — Google, Apache License 2.0. https://github.com/google/material-design-icons
 - Glance repackaged Protocol Buffers runtime — Google Inc., BSD-3-Clause. Copyright 2008 Google Inc. Original conditions and disclaimer: `LICENSES/Protobuf-BSD-3-Clause.txt`, also bundled in the app. https://github.com/protocolbuffers/protobuf
 - Guava ListenableFuture 1.0 — Google, Apache License 2.0 (inherited from guava-parent 26.0-android). https://github.com/google/guava

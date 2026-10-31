@@ -24,9 +24,23 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.*
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import com.hydri.app.domain.TabPosition
+import com.hydri.app.i18n.routeLabel
 
 val primaryTabs = listOf("Home", "Bottles", "Tracker", "More")
+val NavigationIndicatorPosition = SemanticsPropertyKey<Float>("NavigationIndicatorPosition")
+val PrimaryTabRoute = SemanticsPropertyKey<String>("PrimaryTabRoute")
+
+fun primaryTabFor(destination: NavDestination?): String? =
+    destination?.hierarchy?.firstNotNullOfOrNull {
+        when (it.route) {
+            in primaryTabs -> it.route
+            "MoreSection" -> "More"
+            else -> null
+        }
+    }
 
 @Composable
 fun SlidingNavigation(
@@ -53,9 +67,9 @@ fun SlidingNavigation(
     val physical = if (rtl) 3 - index else index
     val slot = width / 4f
     val target =
-        if (dragging) (pointerX - slot / 2).coerceIn(0f, (width - slot).coerceAtLeast(0f))
-        else physical * slot
-    val left by
+        if (dragging && slot > 0f) (pointerX / slot - .5f).coerceIn(0f, 3f) else physical.toFloat()
+    // Animate a tab-relative position, never a pixel coordinate initialized before measurement.
+    val position by
         animateFloatAsState(
             target,
             animationSpec =
@@ -90,6 +104,7 @@ fun SlidingNavigation(
                     .padding(6.dp)
                     .onSizeChanged { width = it.width.toFloat() }
                     .testTag("sliding-navigation")
+                    .semantics { this[NavigationIndicatorPosition] = position }
                     .pointerInput(haptics, rtl) {
                         detectHorizontalDragGestures(
                             onDragStart = { position ->
@@ -117,10 +132,11 @@ fun SlidingNavigation(
                     }
             ) {
                 Canvas(Modifier.matchParentSize()) {
+                    val drawSlot = size.width / 4f
                     drawRoundRect(
                         tint.copy(alpha = .13f),
-                        topLeft = Offset(left, 0f),
-                        size = Size(slot, size.height),
+                        topLeft = Offset(position * drawSlot, 0f),
+                        size = Size(drawSlot, size.height),
                         cornerRadius = CornerRadius(26.dp.toPx()),
                     )
                 }
@@ -151,7 +167,9 @@ fun SlidingNavigation(
                                     role = Role.Tab,
                                     onClick = { if (active) onReselect() else choose(i) },
                                 )
-                                .semantics(mergeDescendants = true) { contentDescription = name }
+                                .semantics(mergeDescendants = true) {
+                                    contentDescription = routeLabel(name)
+                                }
                                 .padding(vertical = 10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -174,7 +192,7 @@ fun SlidingNavigation(
                                     if (active) tint else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
-                                name,
+                                routeLabel(name),
                                 style = MaterialTheme.typography.labelSmall,
                                 color =
                                     if (active) tint else MaterialTheme.colorScheme.onSurfaceVariant,

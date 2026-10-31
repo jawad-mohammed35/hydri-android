@@ -7,9 +7,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hydri.app.HydriApplication
+import com.hydri.app.R
 import com.hydri.app.background.*
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
+import com.hydri.app.i18n.*
 import java.time.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -68,7 +70,10 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
                 actions.withLock { block() }
                 HydriWidgets.update(getApplication())
             } catch (e: Exception) {
-                messages.emit((e.message ?: "That action could not be completed.") to null)
+                messages.emit(
+                    (if (e is UserMessage) e.message!!
+                    else tr(R.string.that_action_could_not_be_completed)) to null
+                )
             }
         }
     }
@@ -98,7 +103,7 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
             if (state.value.settings.goalNotification)
                 Reminders.notify(
                     getApplication(),
-                    "You've reached today's hydration goal!",
+                    tr(R.string.you_ve_reached_today_s_hydration_goal),
                     2,
                     state.value.settings,
                 )
@@ -107,7 +112,7 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(entry: WaterEntry) = action {
         repo.dao.deleteEntry(entry.id)
-        messages.emit("Entry deleted" to { action { repo.dao.putEntry(entry) } })
+        messages.emit(tr(R.string.entry_deleted) to { action { repo.dao.putEntry(entry) } })
     }
 
     fun undo(entry: WaterEntry) = action { repo.dao.deleteEntry(entry.id) }
@@ -128,7 +133,7 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
 
     fun goal(volume: Long) = action {
         repo.goal(volume)
-        messages.emit("Daily goal updated" to null)
+        messages.emit(tr(R.string.daily_goal_updated) to null)
     }
 
     fun bottle(bottle: Bottle) = action { repo.dao.putBottle(bottle) }

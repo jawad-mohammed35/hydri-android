@@ -185,8 +185,13 @@ class StableRefinementDeviceTest {
             .performClick()
         await { entries().any { it == entry } }
         rule.onNodeWithContentDescription("More").clearFloatingNavigation(rule).performClick()
-        rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})").assertDoesNotExist()
+        rule
+            .onNodeWithText("Version ${BuildConfig.VERSION_NAME}")
+            .performScrollTo()
+            .assertIsDisplayed()
+        rule
+            .onNodeWithText("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+            .assertDoesNotExist()
         tap("About")
         rule.onNodeWithText("Developed by Jawad Mohammed").assertIsDisplayed()
         rule.onNodeWithText("LinkedIn").assertHasClickAction()

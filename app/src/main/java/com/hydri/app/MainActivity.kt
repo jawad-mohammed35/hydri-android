@@ -5,17 +5,24 @@ package com.hydri.app
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.*
 import com.hydri.app.ui.HydriApp
+import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private var shortcut by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.hydri.app.i18n.AppText.refresh(this)
+        com.hydri.app.background.Reminders.refreshLabels(this)
+        LauncherShortcuts.publish(this)
+        (application as HydriApplication).scope.launch {
+            com.hydri.app.background.HydriWidgets.update(applicationContext)
+        }
         shortcut =
             LauncherShortcuts.action(
                 if (savedInstanceState != null) savedInstanceState.getString("pending-shortcut")

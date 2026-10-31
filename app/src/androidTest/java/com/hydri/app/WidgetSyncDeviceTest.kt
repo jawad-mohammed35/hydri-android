@@ -164,6 +164,74 @@ class WidgetSyncDeviceTest {
     }
 
     @Test
+    fun widgetsNotificationsAndShortcutsUseAllSevenAppLanguages() = runBlocking {
+        androidx.test.core.app.ActivityScenario.launch(MainActivity::class.java).use {
+            val originalLanguage = com.hydri.app.i18n.AppLocales.current(context)
+            try {
+                val (id, view) = bind(MediumWidgetReceiver::class.java)
+                shell("pm grant com.hydri.app android.permission.POST_NOTIFICATIONS")
+                listOf("en", "es", "fr", "zh-Hans", "ko", "ja", "id").forEach { code ->
+                    instrumentation.runOnMainSync { com.hydri.app.i18n.AppLocales.select(code) }
+                    await("App language did not change: $code") {
+                        com.hydri.app.i18n.AppLocales.current(context) == code &&
+                            com.hydri.app.i18n.AppText.locale.language ==
+                                java.util.Locale.forLanguageTag(code).language
+                    }
+                    val goal = Repository.goalFor(repo.dao.allGoals(), LocalDate.now())
+                    val expected =
+                        com.hydri.app.i18n.tr(R.string.of_value, Volume.format(goal, "mL"))
+                    await("Widget did not adopt language $code: ${text(view)}") {
+                        text(view).contains(expected)
+                    }
+                    val shortcuts =
+                        context.getSystemService(android.content.pm.ShortcutManager::class.java)
+                    await("Shortcut label not localized: $code") {
+                        shortcuts.dynamicShortcuts
+                            .firstOrNull { it.id == "log-water" }
+                            ?.shortLabel
+                            .toString() == com.hydri.app.i18n.tr(R.string.shortcut_log)
+                    }
+                    val message =
+                        com.hydri.app.i18n.tr(
+                            R.string.time_for_a_little_water_a_quick_sip_can_help_you_stay_on_t
+                        )
+                    Reminders.notify(
+                        context,
+                        message,
+                        941,
+                        repo.preferences.flow.first().copy(sound = false, vibration = false),
+                    )
+                    val notifications =
+                        context.getSystemService(android.app.NotificationManager::class.java)
+                    await("Notification missing for $code") {
+                        notifications.activeNotifications.any { it.id == 941 }
+                    }
+                    assertEquals(
+                        message,
+                        notifications.activeNotifications
+                            .first { it.id == 941 }
+                            .notification
+                            .extras
+                            .getCharSequence(android.app.Notification.EXTRA_TEXT)
+                            .toString(),
+                    )
+                    notifications.cancel(941)
+                    capture(view, "language-$code")
+                }
+                resize(view, id, 160, 120)
+                assertTrue(text(view).isNotEmpty())
+            } finally {
+                instrumentation.runOnMainSync {
+                    com.hydri.app.i18n.AppLocales.select(originalLanguage)
+                }
+                await("Restore original language") {
+                    com.hydri.app.i18n.AppLocales.current(context) == originalLanguage
+                }
+            }
+        }
+    }
+
+    @Test
     fun widgetQuickAddAndLiveChangesRefreshWithoutOpeningApp() = runBlocking {
         val (id, view) = bind(MediumWidgetReceiver::class.java)
         val today = LocalDate.now().toString()

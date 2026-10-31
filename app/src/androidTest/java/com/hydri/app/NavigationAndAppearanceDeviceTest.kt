@@ -170,9 +170,13 @@ class NavigationAndAppearanceDeviceTest {
         await { rule.onAllNodesWithTag("settings-page-About").fetchSemanticsNodes().isEmpty() }
         rule.waitForIdle()
         tap("Notifications")
-        await { rule.onAllNodesWithTag("settings-page-Notifications").fetchSemanticsNodes().isNotEmpty() }
+        await {
+            rule.onAllNodesWithTag("settings-page-Notifications").fetchSemanticsNodes().isNotEmpty()
+        }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-        Thread.sleep(300) // Android's real input dispatcher is separate from the Compose test clock.
+        Thread.sleep(
+            300
+        ) // Android's real input dispatcher is separate from the Compose test clock.
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
         await { rule.onAllNodesWithTag("settings-page-More").fetchSemanticsNodes().isNotEmpty() }
     }

@@ -1,5 +1,7 @@
 # Development and data rules
 
+Version 1.3.0 adds seven offline languages and native per-app language preferences; see [localization maintenance](LOCALIZATION.md). The database remains schema 2. Current verification is recorded in [1.3.0 verification](VERIFICATION-1.3.0.md); older reports below describe their respective releases.
+
 Run the commands below from the repository root. Hydri is licensed under Apache License 2.0; see the root LICENSE and third-party notices.
 
 ## Open and run
@@ -109,7 +111,7 @@ adb -s emulator-5580 shell am instrument -w -e hydriQa true -e class com.hydri.a
 
 `UpgradeDeviceTest` also requires `upgrade-1.2.1.json` in the app's external-files directory and skips when it is absent. Before upgrading the QA installation, `BaselineCaptureDeviceTest` captures it only with `-e captureBaseline true`. `WidgetSyncDeviceTest` temporarily changes the QA emulator's palette/night mode, restores them afterward, and requires shell widget-binding permission. Do not enable QA tests on a phone containing personal records.
 
-See [1.2.2 verification](VERIFICATION-1.2.2.md) for current results, [1.2.1 verification](VERIFICATION-1.2.1.md), [1.2.0 verification](VERIFICATION-1.2.0.md), [1.1.0 verification](VERIFICATION-1.1.0.md) and [original verification](VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
+See [1.3.0 verification](VERIFICATION-1.3.0.md) for current results, [1.2.2 verification](VERIFICATION-1.2.2.md), [1.2.1 verification](VERIFICATION-1.2.1.md), [1.2.0 verification](VERIFICATION-1.2.0.md), [1.1.0 verification](VERIFICATION-1.1.0.md) and [original verification](VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
 
 ## Release status
 

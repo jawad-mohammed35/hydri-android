@@ -208,14 +208,20 @@ class PolishDeviceTest {
                 "Focused controls should clear the overlay",
                 notifications.getUnclippedBoundsInRoot().bottom <= bar.top,
             )
-            rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}").performScrollTo().assertIsDisplayed()
+            rule
+                .onNodeWithText("Version ${BuildConfig.VERSION_NAME}")
+                .performScrollTo()
+                .assertIsDisplayed()
             // The viewport draws behind the overlay; scroll through the reserved end padding.
             rule.onNodeWithTag("page-viewport").performTouchInput {
                 swipeUp(startY = height * .6f, endY = height * .2f, durationMillis = 350)
             }
             assertTrue(
                 "Bottom content must remain reachable above the bar",
-                rule.onNodeWithText("Version ${BuildConfig.VERSION_NAME}").getUnclippedBoundsInRoot().bottom < bar.top,
+                rule
+                    .onNodeWithText("Version ${BuildConfig.VERSION_NAME}")
+                    .getUnclippedBoundsInRoot()
+                    .bottom < bar.top,
             )
         }
         capture("floating-navigation")

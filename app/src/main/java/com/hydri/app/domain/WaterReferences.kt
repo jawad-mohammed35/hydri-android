@@ -3,8 +3,11 @@
 
 package com.hydri.app.domain
 
+import com.hydri.app.R
+import com.hydri.app.i18n.*
+
 data class WaterReference(
-    val age: String,
+    val age: Int,
     val male: Long,
     val female: Long,
     val maleUpper: Long = male,
@@ -15,19 +18,19 @@ object WaterReferences {
     // Canonical microlitres. US: IOM/National Academies 2005; Nordic: NNR 2023, adopting EFSA 2010.
     val us =
         listOf(
-            WaterReference("1–3 years", 1_300_000, 1_300_000),
-            WaterReference("4–8 years", 1_700_000, 1_700_000),
-            WaterReference("9–13 years", 2_400_000, 2_100_000),
-            WaterReference("14–18 years", 3_300_000, 2_300_000),
-            WaterReference("19+ years", 3_700_000, 2_700_000),
+            WaterReference(R.string.label_1_3_years, 1_300_000, 1_300_000),
+            WaterReference(R.string.label_4_8_years, 1_700_000, 1_700_000),
+            WaterReference(R.string.label_9_13_years, 2_400_000, 2_100_000),
+            WaterReference(R.string.label_14_18_years, 3_300_000, 2_300_000),
+            WaterReference(R.string.label_19_years, 3_700_000, 2_700_000),
         )
     val nordic =
         listOf(
-            WaterReference("1–2 years", 1_100_000, 1_100_000, 1_200_000, 1_200_000),
-            WaterReference("2–3 years", 1_300_000, 1_300_000),
-            WaterReference("4–8 years", 1_600_000, 1_600_000),
-            WaterReference("9–13 years", 2_100_000, 1_900_000),
-            WaterReference("14+ years", 2_500_000, 2_000_000),
+            WaterReference(R.string.label_1_2_years, 1_100_000, 1_100_000, 1_200_000, 1_200_000),
+            WaterReference(R.string.label_2_3_years, 1_300_000, 1_300_000),
+            WaterReference(R.string.label_4_8_years, 1_600_000, 1_600_000),
+            WaterReference(R.string.label_9_13_years, 2_100_000, 1_900_000),
+            WaterReference(R.string.label_14_years, 2_500_000, 2_000_000),
         )
 
     fun amount(low: Long, high: Long, unit: String): String =

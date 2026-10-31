@@ -23,12 +23,16 @@ class HydriApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.hydri.app.i18n.AppText.refresh(this)
         LauncherShortcuts.publish(this)
+        com.hydri.app.background.Reminders.refreshLabels(this)
         scope.launch { repository.initialize() }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        com.hydri.app.i18n.AppText.refresh(this)
+        LauncherShortcuts.publish(this)
         scope.launch { HydriWidgets.update(this@HydriApplication) }
     }
 }

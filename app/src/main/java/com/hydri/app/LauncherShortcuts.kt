@@ -27,15 +27,29 @@ object LauncherShortcuts {
                 Triple("tracker", R.string.shortcut_tracker, R.drawable.shortcut_tracker),
             )
         if (
-            manager.dynamicShortcuts.map { it.id to it.intent?.action }.toSet() ==
-                specs.mapIndexed { i, spec -> spec.first to actions[i] }.toSet()
+            manager.dynamicShortcuts.all {
+                it.extras?.getInt("hydriVersion") == BuildConfig.VERSION_CODE
+            } &&
+                manager.dynamicShortcuts
+                    .map { Triple(it.id, it.intent?.action, it.shortLabel.toString()) }
+                    .toSet() ==
+                    specs
+                        .mapIndexed { i, spec ->
+                            Triple(spec.first, actions[i], com.hydri.app.i18n.tr(spec.second))
+                        }
+                        .toSet()
         )
             return
         if (manager.isRateLimitingActive) return
-        manager.dynamicShortcuts =
+        val localized =
             specs.mapIndexed { index, spec ->
                 ShortcutInfo.Builder(context, spec.first)
-                    .setShortLabel(context.getString(spec.second))
+                    .setExtras(
+                        android.os.PersistableBundle().apply {
+                            putInt("hydriVersion", BuildConfig.VERSION_CODE)
+                        }
+                    )
+                    .setShortLabel(com.hydri.app.i18n.tr(spec.second))
                     .setIcon(Icon.createWithResource(context, spec.third))
                     .setRank(index)
                     .setIntent(
@@ -49,5 +63,7 @@ object LauncherShortcuts {
                     )
                     .build()
             }
+        manager.dynamicShortcuts = localized
+        manager.updateShortcuts(localized)
     }
 }

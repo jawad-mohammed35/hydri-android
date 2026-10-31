@@ -16,6 +16,7 @@ import com.hydri.app.*
 import com.hydri.app.R
 import com.hydri.app.data.*
 import com.hydri.app.domain.Volume
+import com.hydri.app.i18n.*
 import java.time.LocalDate
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -157,7 +158,7 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
             )
             if (roomy)
                 Text(
-                    "$percent%",
+                    percentText(percent),
                     style =
                         TextStyle(color = accent, fontSize = 14.sp, fontWeight = FontWeight.Bold),
                     maxLines = 1,
@@ -190,7 +191,7 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
                                 android.graphics.Color.TRANSPARENT,
                             )
                         ),
-                        "$percent percent of daily goal",
+                        tr(R.string.value_percent_of_daily_goal, percent),
                         modifier = GlanceModifier.fillMaxSize(),
                         colorFilter = ColorFilter.tint(accent),
                     )
@@ -204,13 +205,19 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
                         maxLines = 1,
                     )
                     Text(
-                        "of ${Volume.format(state.goal,state.settings.unit)}",
+                        tr(R.string.of_value, Volume.format(state.goal, state.settings.unit)),
                         style = TextStyle(color = muted, fontSize = 12.sp),
                         maxLines = 1,
                     )
                     if (size.height >= 210.dp)
                         Text(
-                            "${Volume.format((state.goal-state.total).coerceAtLeast(0),state.settings.unit)} left",
+                            tr(
+                                R.string.value_left,
+                                Volume.format(
+                                    (state.goal - state.total).coerceAtLeast(0),
+                                    state.settings.unit,
+                                ),
+                            ),
                             style = TextStyle(color = muted, fontSize = 11.sp),
                             maxLines = 1,
                         )
@@ -236,8 +243,13 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
             )
             Spacer(GlanceModifier.height(4.dp))
             Text(
-                if (compact) "$percent%"
-                else "$percent% of ${Volume.format(state.goal,state.settings.unit)}",
+                if (compact) percentText(percent)
+                else
+                    tr(
+                        R.string.value_of_value,
+                        percent,
+                        Volume.format(state.goal, state.settings.unit),
+                    ),
                 style = TextStyle(color = muted, fontSize = 11.sp),
                 maxLines = 1,
             )
@@ -247,7 +259,7 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
             val favorites = state.bottles.take(if (size.width >= 240.dp) 2 else 1)
             if (favorites.isEmpty())
                 Text(
-                    "Favorite a bottle in Hydri",
+                    tr(R.string.favorite_a_bottle_in_hydri),
                     style = TextStyle(color = muted, fontSize = 12.sp),
                     maxLines = 1,
                 )
@@ -277,7 +289,7 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
                             Column(horizontalAlignment = Alignment.Horizontal.CenterHorizontally) {
                                 if (size.width >= 320.dp)
                                     Text(
-                                        bottle.name,
+                                        bottleDisplayName(bottle),
                                         style =
                                             TextStyle(
                                                 color = colors.onPrimaryContainer,
@@ -321,6 +333,11 @@ class WidgetAdd : ActionCallback {
         repo.log(bottle.volume, bottle.name, bottle = bottle)
         HydriWidgets.update(context)
         if (settings.goalNotification && before < goal && before + bottle.volume >= goal)
-            Reminders.notify(context, "You've reached today's hydration goal!", 2, settings)
+            Reminders.notify(
+                context,
+                tr(R.string.you_ve_reached_today_s_hydration_goal),
+                2,
+                settings,
+            )
     }
 }

@@ -15,8 +15,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
+import com.hydri.app.R
 import com.hydri.app.data.*
 import com.hydri.app.domain.*
+import com.hydri.app.i18n.*
 import java.time.*
 import java.util.UUID
 
@@ -46,7 +48,7 @@ fun AmountDialog(
     var preset by remember { mutableStateOf<Long?>(null) }
     GlassEditor(
         title,
-        "Save goal",
+        tr(R.string.save_goal),
         Volume.parse(text, unit) != null,
         onDismiss,
         { onSave(preset ?: if (dirty) Volume.parse(text, unit)!! else initial) },
@@ -91,21 +93,22 @@ fun BottleDialog(
     onDismiss: () -> Unit,
     onSave: (Bottle) -> Unit,
 ) {
-    var name by remember { mutableStateOf(bottle?.name ?: "") }
+    var name by remember { mutableStateOf(bottle?.let(::bottleDisplayName) ?: "") }
+    var nameDirty by remember { mutableStateOf(false) }
     var volume by remember { mutableStateOf(Volume.input(bottle?.volume ?: 500_000, unit)) }
     var dirty by remember { mutableStateOf(false) }
     var icon by remember { mutableIntStateOf(bottle?.icon ?: 1) }
     var color by remember { mutableIntStateOf(bottle?.color ?: 0) }
     GlassEditor(
-        if (bottle == null) "Create bottle" else "Edit bottle",
-        "Save bottle",
+        if (bottle == null) tr(R.string.create_bottle) else tr(R.string.edit_bottle),
+        tr(R.string.save_bottle),
         name.isNotBlank() && Volume.parse(volume, unit) != null,
         onDismiss,
         {
             onSave(
                 Bottle(
                     bottle?.id ?: UUID.randomUUID().toString(),
-                    name.trim(),
+                    if (bottle != null && !nameDirty) bottle.name else name.trim(),
                     if (!dirty && bottle != null) bottle.volume else Volume.parse(volume, unit)!!,
                     icon,
                     color,
@@ -125,7 +128,7 @@ fun BottleDialog(
             Symbol(bottleIcons[icon], bottleNames[icon], accents[color], 56)
             Column(Modifier.weight(1f)) {
                 Text(
-                    name.ifBlank { "Bottle preview" },
+                    name.ifBlank { tr(R.string.bottle_preview) },
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
@@ -136,8 +139,11 @@ fun BottleDialog(
         }
         OutlinedTextField(
             name,
-            { name = it.take(60) },
-            label = { Text("Bottle name") },
+            {
+                name = it.take(60)
+                nameDirty = true
+            },
+            label = { Text(tr(R.string.bottle_name)) },
             singleLine = true,
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -150,7 +156,7 @@ fun BottleDialog(
             },
             unit,
         )
-        Text("Shape", style = MaterialTheme.typography.labelLarge)
+        Text(tr(R.string.shape), style = MaterialTheme.typography.labelLarge)
         Row(
             Modifier.testTag("bottle-shapes").horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -169,7 +175,7 @@ fun BottleDialog(
                 }
             }
         }
-        Text("Color", style = MaterialTheme.typography.labelLarge)
+        Text(tr(R.string.color), style = MaterialTheme.typography.labelLarge)
         AccentPicker(color) { color = it }
     }
 }
@@ -207,8 +213,8 @@ fun EntryDialog(
         else LocalTime.of(timeState.hour, timeState.minute)
     val timestamp = EntryTime.resolve(date, time, zone, entry?.timestamp)
     GlassEditor(
-        if (entry == null) "Log water" else "Edit sip",
-        "Save entry",
+        if (entry == null) tr(R.string.log_water) else tr(R.string.edit_sip),
+        tr(R.string.save_entry),
         Volume.parse(amount, s.unit) != null && timestamp != null && date <= LocalDate.now(),
         onDismiss,
         {
@@ -240,20 +246,21 @@ fun EntryDialog(
             Icon(Icons.Outlined.Schedule, null)
             Spacer(Modifier.width(10.dp))
             Text(
-                "Time: " +
+                tr(
+                    R.string.time_value,
                     time.format(
                         java.time.format.DateTimeFormatter.ofPattern(
-                            if (s.timeFormat == "24-hour" || (s.timeFormat == "System" && system24))
-                                "HH:mm"
-                            else "h:mm a"
+                            timePattern(s.timeFormat, system24),
+                            AppText.locale,
                         )
-                    )
+                    ),
+                )
             )
         }
         if (showTime) TimeInput(timeState, modifier = Modifier.align(Alignment.CenterHorizontally))
         if (timestamp == null)
             Text(
-                "This time does not exist on this date. Choose another time.",
+                tr(R.string.this_time_does_not_exist_on_this_date_choose_another_time),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -262,7 +269,7 @@ fun EntryDialog(
         if (entry != null)
             TextButton(onClick = { onDelete(entry) }) {
                 Icon(Icons.Outlined.DeleteOutline, null)
-                Text("Delete entry", color = MaterialTheme.colorScheme.error)
+                Text(tr(R.string.delete_entry), color = MaterialTheme.colorScheme.error)
             }
     }
 }

@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import com.hydri.app.R
+import com.hydri.app.i18n.*
 
 @Composable
 fun GlassDialog(
@@ -96,7 +98,7 @@ fun GlassDialog(
                                 style = MaterialTheme.typography.titleLarge,
                             )
                             IconButton({ close(onDismiss) }) {
-                                Icon(Icons.Outlined.Close, "Close editor")
+                                Icon(Icons.Outlined.Close, tr(R.string.close_editor))
                             }
                         }
                         Column(
@@ -113,7 +115,7 @@ fun GlassDialog(
                                 Modifier.weight(1f),
                                 shape = RoundedCornerShape(18.dp),
                             ) {
-                                Text("Cancel")
+                                Text(tr(R.string.cancel))
                             }
                             Button(
                                 { close(onConfirm) },

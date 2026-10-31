@@ -4,7 +4,9 @@
 package com.hydri.app.data
 
 import androidx.room.withTransaction
+import com.hydri.app.R
 import com.hydri.app.domain.*
+import com.hydri.app.i18n.*
 import java.time.*
 import java.util.UUID
 import kotlinx.coroutines.flow.first
@@ -99,6 +101,7 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
                 .apply {
                     put("format", "hydri")
                     put("version", 1)
+                    put("applicationLocales", AppLocales.tags())
                     put("settings", preferences.flow.first().json())
                     put(
                         "entries",
@@ -160,12 +163,16 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
      */
     suspend fun restore(text: String) =
         writes.withLock {
-            require(text.length <= 10_000_000) { "Backup is too large (10 MB maximum)." }
+            if (text.length > 10_000_000)
+                throw UserMessage(tr(R.string.backup_is_too_large_10_mb_maximum))
             val root = JSONObject(text)
-            require(root.getString("format") == "hydri" && root.getInt("version") == 1) {
-                "Unsupported backup format."
-            }
+            if (root.getString("format") != "hydri" || root.getInt("version") != 1)
+                throw UserMessage(tr(R.string.unsupported_backup_format))
             val settings = Settings.from(root.getJSONObject("settings"))
+            val language =
+                if (root.has("applicationLocales")) root.getString("applicationLocales") else null
+            if (language != null && !AppLocales.supports(language))
+                throw UserMessage(tr(R.string.invalid_backup))
             fun array(key: String) =
                 root.getJSONArray(key).let { a ->
                     require(a.length() <= 100_000)
@@ -237,6 +244,7 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
                 preferences.save(oldSettings)
                 throw e
             }
+            language?.let { AppLocales.select(it) }
         }
 
     suspend fun csv(): String = buildString {

@@ -25,8 +25,10 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.core.view.WindowCompat
+import com.hydri.app.R
 import com.hydri.app.data.Settings
 import com.hydri.app.domain.Volume
+import com.hydri.app.i18n.*
 import kotlin.math.*
 
 val accents =
@@ -38,7 +40,16 @@ val accents =
         Color(0xFFBD7519),
         Color(0xFF347A98),
     )
-val accentNames = listOf("Water blue", "Lagoon", "Lavender", "Rose", "Amber", "Slate")
+val accentNames
+    get() =
+        listOf(
+            tr(R.string.water_blue),
+            tr(R.string.lagoon),
+            tr(R.string.lavender),
+            tr(R.string.rose),
+            tr(R.string.amber),
+            tr(R.string.slate),
+        )
 val bottleIcons =
     listOf(
         Icons.Outlined.LocalDrink,
@@ -49,8 +60,17 @@ val bottleIcons =
         Icons.Outlined.EmojiFoodBeverage,
         Icons.Outlined.Category,
     )
-val bottleNames =
-    listOf("Glass", "Bottle", "Large bottle", "Tumbler", "Sports bottle", "Mug", "Custom container")
+val bottleNames
+    get() =
+        listOf(
+            tr(R.string.glass),
+            tr(R.string.bottle),
+            tr(R.string.large_bottle),
+            tr(R.string.tumbler),
+            tr(R.string.sports_bottle),
+            tr(R.string.mug),
+            tr(R.string.custom_container),
+        )
 val LocalReducedMotion = staticCompositionLocalOf { false }
 val LocalFloatingBarInset = staticCompositionLocalOf { 0.dp }
 val LocalTabScrollRequest =
@@ -82,7 +102,10 @@ fun HydriTheme(s: Settings, content: @Composable () -> Unit) {
                 AndroidSettings.Global.ANIMATOR_DURATION_SCALE,
                 1f,
             ) == 0f
-    CompositionLocalProvider(LocalReducedMotion provides motionOff) {
+    CompositionLocalProvider(
+        LocalReducedMotion provides motionOff,
+        androidx.compose.ui.platform.LocalLayoutDirection provides LayoutDirection.Ltr,
+    ) {
         MaterialTheme(
             colorScheme = scheme,
             typography =
@@ -253,7 +276,7 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
         animateFloatAsState(
             ratio,
             tween(if (LocalReducedMotion.current) 0 else 750),
-            label = "Water progress",
+            label = tr(R.string.water_progress),
         )
     val primary = MaterialTheme.colorScheme.primary
     val track = MaterialTheme.colorScheme.surfaceVariant
@@ -262,7 +285,12 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             mergeDescendants = true
         ) {
             contentDescription =
-                "${Volume.format(total,unit)} of ${Volume.format(goal,unit)}, ${(total.toDouble()/goal*100).toInt()} percent"
+                tr(
+                    R.string.value_of_value_value_percent,
+                    Volume.format(total, unit),
+                    Volume.format(goal, unit),
+                    (total.toDouble() / goal * 100).toInt(),
+                )
         },
         contentAlignment = Alignment.Center,
     ) {
@@ -332,12 +360,12 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             )
             Text(Volume.format(total, unit), style = MaterialTheme.typography.headlineLarge)
             Text(
-                "of ${Volume.format(goal,unit)}",
+                tr(R.string.of_value, Volume.format(goal, unit)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "${(total.toDouble()/goal*100).toInt()}%",
+                percentText((total.toDouble() / goal * 100).toInt()),
                 color = primary,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -347,7 +375,7 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
 
 @Composable
 fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(selected, onClick, label = { Text(label) })
+    FilterChip(selected, onClick, label = { Text(displaySetting(label)) })
 }
 
 @Composable
@@ -379,7 +407,7 @@ fun <T> SettingMenu(
     title: String,
     value: T,
     options: List<T>,
-    label: (T) -> String = { it.toString() },
+    label: (T) -> String = { displaySetting(it.toString()) },
     onChange: (T) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -389,14 +417,22 @@ fun <T> SettingMenu(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(title, modifier = Modifier.weight(1f))
-        Box {
+        Box(Modifier.widthIn(max = 208.dp)) {
             OutlinedButton(
                 onClick = { expanded = !expanded },
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                modifier = Modifier.semantics { contentDescription = "$title: ${label(value)}" },
+                modifier =
+                    Modifier.semantics {
+                        contentDescription = tr(R.string.value_value, title, label(value))
+                    },
             ) {
-                Text(label(value))
+                Text(
+                    label(value),
+                    Modifier.weight(1f, fill = false),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
                 Icon(Icons.Outlined.ExpandMore, null)
             }
             DropdownMenu(
@@ -411,6 +447,14 @@ fun <T> SettingMenu(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (option == value)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .08f)
+                                    else Color.Transparent
+                                )
+                                .semantics { selected = option == value },
                         text = { Text(label(option)) },
                         onClick = {
                             expanded = false

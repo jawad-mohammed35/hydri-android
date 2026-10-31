@@ -29,11 +29,13 @@ android {
         applicationId = "com.hydri.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.2.3"
+        versionCode = 7
+        versionName = "1.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true; buildConfig = true }
+    // Every language must remain available offline, including any future app-bundle builds.
+    bundle { language { enableSplit = false } }
     buildTypes {
         getByName("release") {
             // Preserve compatibility with the existing testing release. No new key is generated.
@@ -48,6 +50,7 @@ android {
 }
 kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
 dependencies {
+    implementation("androidx.appcompat:appcompat:1.7.1")
     implementation(platform("androidx.compose:compose-bom:2025.01.00"))
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.9.3")

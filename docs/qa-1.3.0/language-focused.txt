@@ -1,0 +1,8 @@
+
+com.hydri.app.LanguageDeviceTest:.
+
+Time: 158.91
+
+OK (1 test)
+
+

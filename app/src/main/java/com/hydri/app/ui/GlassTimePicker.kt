@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
+import com.hydri.app.R
+import com.hydri.app.i18n.*
 
 @Composable
 fun GlassTimePicker(
@@ -105,7 +107,7 @@ fun GlassTimePicker(
                                         if (value.length <= 2 && value.all(Char::isDigit))
                                             hour = value
                                     },
-                                    label = { Text("Hour") },
+                                    label = { Text(tr(R.string.hour)) },
                                     singleLine = true,
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(18.dp),
@@ -122,7 +124,7 @@ fun GlassTimePicker(
                                         if (value.length <= 2 && value.all(Char::isDigit))
                                             minute = value
                                     },
-                                    label = { Text("Minute") },
+                                    label = { Text(tr(R.string.minute)) },
                                     singleLine = true,
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(18.dp),
@@ -137,11 +139,12 @@ fun GlassTimePicker(
                             }
                             if (!is24Hour)
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Choice("AM", !pm) { pm = false }
-                                    Choice("PM", pm) { pm = true }
+                                    Choice(tr(R.string.am), !pm) { pm = false }
+                                    Choice(tr(R.string.pm), pm) { pm = true }
                                 }
                             Text(
-                                if (is24Hour) "24-hour time" else "12-hour time",
+                                if (is24Hour) tr(R.string.label_24_hour_time)
+                                else tr(R.string.label_12_hour_time),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -155,7 +158,7 @@ fun GlassTimePicker(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(18.dp),
                             ) {
-                                Text("Cancel")
+                                Text(tr(R.string.cancel))
                             }
                             Button(
                                 {
@@ -170,7 +173,7 @@ fun GlassTimePicker(
                                 modifier = Modifier.weight(1.3f),
                                 shape = RoundedCornerShape(18.dp),
                             ) {
-                                Text("Save time")
+                                Text(tr(R.string.save_time))
                             }
                         }
                     }
