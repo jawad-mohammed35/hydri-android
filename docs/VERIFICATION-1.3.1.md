@@ -33,7 +33,7 @@ All **6** component/navigation tests passed again at **720 × 1280 px, density 3
 
 The existing signing identity is preserved. It remains the original Android testing certificate; see [signing guidance](SIGNING.md). No replacement key or signing credential is committed. Apache LICENSE, NOTICE and third-party license assets remain unchanged. Existing stable releases are retained.
 
-Local APK: **14,412,946 bytes**, SHA-256 `bfb0c05efd443d01bc6113d1bdf732fe55b2e5d11a2847a85fa26638067e96ac`. APK Signature Scheme v2 verifies against certificate SHA-256 `ed0e989eaa47ed777d32e9dcc9902f4462d349f5ad132bb8568971383b3ec9f0`. Installation over the captured 1.3.0 QA data and the original-data comparison passed. Public download verification is recorded on main after publication.
+Local APK: **14,412,946 bytes**, SHA-256 `bfb0c05efd443d01bc6113d1bdf732fe55b2e5d11a2847a85fa26638067e96ac`. APK Signature Scheme v2 verifies against certificate SHA-256 `ed0e989eaa47ed777d32e9dcc9902f4462d349f5ad132bb8568971383b3ec9f0`. Installation over the captured 1.3.0 QA data and the original-data comparison passed. The [1.3.1 stable release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.3.1) is published with draft=false, prerelease=false and latest status. Its APK was downloaded without authentication, matched the tested file byte-for-byte by SHA-256, and its signature verified. The downloaded file installed with `adb install -r`, cold-launched with Status: ok, and passed the original 1.3.0 records/bottles/goals/preferences/badge-statistics comparison again. See [downloaded-APK upgrade result](qa-1.3.1/downloaded-upgrade.txt). Stable releases v1.2.1, v1.2.2, v1.2.3 and v1.3.0 and their assets were verified as retained.
 
 ## Limits
 
