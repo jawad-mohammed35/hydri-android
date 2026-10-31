@@ -36,7 +36,7 @@ The root Apache LICENSE and NOTICE remain unchanged. [Historical licensing findi
 
 The release preserves the original installed-app certificate. It remains the original Android testing identity, not a newly created dedicated production key. See [signing guidance](SIGNING.md). No private key or password is committed. Earlier stable releases remain available.
 
-Local release APK: **14,411,498 bytes**; SHA-256 `4813a835d49a5176c700301dffe1033ec8d018c545c79031d0ce0d1b287903fb`. APK Signature Scheme v2 verifies against the original certificate, and the signed release has been installed over the QA app with original-data comparison passing. Public download verification is recorded on main after the release becomes available.
+Local release APK: **14,411,498 bytes**; SHA-256 `4813a835d49a5176c700301dffe1033ec8d018c545c79031d0ce0d1b287903fb`. APK Signature Scheme v2 verifies against the original certificate, and the signed release has been installed over the QA app with original-data comparison passing. The [stable release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.3.0) was published with draft=false and prerelease=false and confirmed as latest. Its APK was downloaded without authentication; its bytes and SHA-256 matched the built APK, its v2 signature verified with the original certificate, and it installed with `adb install -r`. A real cold launch returned Status: ok. The downloaded APK passed the original 1.2.3 baseline comparison again: entries, bottles, goals, preferences and derived badge statistics remain intact. Previous stable releases v1.2.1, v1.2.2 and v1.2.3 and their assets were verified as retained. See [downloaded-APK upgrade result](qa-1.3.0/downloaded-upgrade.txt).
 
 ## Limits
 
