@@ -14,7 +14,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.*
 
-class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
+class Repository(
+    val db: HydriDatabase,
+    val preferences: PreferenceStore,
+    private val currentTime: () -> ZonedDateTime = { ZonedDateTime.now() },
+) {
     val dao = db.dao()
     private val writes = Mutex()
 
@@ -42,27 +46,76 @@ class Repository(val db: HydriDatabase, val preferences: PreferenceStore) {
         bottle: Bottle? = null,
     ): WaterEntry =
         writes.withLock {
-            require(volume in 1_000..20_000_000 && date <= LocalDate.now())
-            val entry =
-                WaterEntry(
-                    UUID.randomUUID().toString(),
-                    volume,
-                    timestamp,
-                    date.toString(),
-                    name.take(60),
-                    ZoneId.systemDefault().id,
-                    bottle?.id,
-                    bottle?.icon,
-                    bottle?.color,
-                )
             db.withTransaction {
+                val now = currentTime()
+                requireToday(date.toString(), now.toLocalDate())
+                require(volume in 1_000..20_000_000)
+                require(Instant.ofEpochMilli(timestamp).atZone(now.zone).toLocalDate() == date)
+                val entry =
+                    WaterEntry(
+                        UUID.randomUUID().toString(),
+                        volume,
+                        timestamp,
+                        date.toString(),
+                        name.take(60),
+                        now.zone.id,
+                        bottle?.id,
+                        bottle?.icon,
+                        bottle?.color,
+                    )
                 if (dao.allGoals().none { it.date <= date.toString() })
                     dao.putGoal(
                         Goal(date.toString(), dao.allGoals().firstOrNull()?.volume ?: 2_500_000)
                     )
                 dao.putEntry(entry)
+                entry
             }
-            entry
+        }
+
+    private fun requireToday(date: String, today: LocalDate = currentTime().toLocalDate()) {
+        if (!EntryPolicy.canModify(date, today)) throw UserMessage(tr(R.string.entry_today_only))
+    }
+
+    /** Read the persisted row inside the transaction; callers cannot spoof its original date. */
+    suspend fun updateEntry(id: String, volume: Long, timestamp: Long) =
+        writes.withLock {
+            db.withTransaction {
+                val entry = requireNotNull(dao.entry(id))
+                requireToday(entry.date)
+                require(volume in 1_000..20_000_000)
+                require(
+                    Instant.ofEpochMilli(timestamp)
+                        .atZone(ZoneId.of(entry.zone))
+                        .toLocalDate()
+                        .toString() == entry.date
+                )
+                dao.putEntry(entry.copy(volume = volume, timestamp = timestamp))
+            }
+        }
+
+    suspend fun deleteEntry(id: String): WaterEntry? =
+        writes.withLock {
+            db.withTransaction {
+                dao.entry(id)?.also { entry ->
+                    requireToday(entry.date)
+                    dao.deleteEntry(id)
+                }
+            }
+        }
+
+    /** Undo restores only the exact deleted row, only while its calendar day is still current. */
+    suspend fun restoreDeletedEntry(entry: WaterEntry) =
+        writes.withLock {
+            db.withTransaction {
+                requireToday(entry.date)
+                check(dao.entry(entry.id) == null)
+                dao.putEntry(entry)
+            }
+        }
+
+    suspend fun resetToday() =
+        writes.withLock {
+            db.withTransaction { dao.clearEntriesOn(currentTime().toLocalDate().toString()) }
         }
 
     suspend fun goal(volume: Long) {

@@ -20,7 +20,7 @@ class BaselineCaptureDeviceTest {
                 app.repository.dao.allEntries().isEmpty()
         ) {
             app.repository.log(250_000, "QA upgrade today")
-            app.repository.log(
+            app.repository.seedHistory(
                 500_000,
                 "QA upgrade history",
                 java.time.LocalDate.now().minusDays(1),

@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
@@ -251,7 +252,7 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
         GlassCard(Modifier.fillMaxWidth()) {
             SectionTitle(
                 formattedDate(selected, s.dateFormat),
-                tr(R.string.log_water),
+                if (selected == state.today) tr(R.string.log_water) else null,
                 { onAdd(selected) },
             )
             Text(
@@ -426,68 +427,67 @@ fun SipHistory(state: UiState, onEntry: (WaterEntry) -> Unit) {
     val duration = if (LocalReducedMotion.current) 0 else 180
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         SectionTitle(tr(R.string.sip_history))
-        if (state.entries.isEmpty())
-            Text(tr(R.string.no_history_yet), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        state.entries
-            .groupBy { it.date }
-            .toSortedMap(reverseOrder())
-            .forEach { (date, entries) ->
-                GlassCard(Modifier.fillMaxWidth()) {
-                    val open = date in expanded
-                    Row(
-                        Modifier.fillMaxWidth()
-                            .clickable { expanded = if (open) expanded - date else expanded + date }
-                            .semantics(mergeDescendants = true) {
-                                stateDescription =
-                                    if (open) tr(R.string.expanded) else tr(R.string.collapsed)
-                                role = Role.Button
-                                contentDescription =
-                                    tr(
-                                        R.string.history_value,
-                                        formattedDate(
-                                            LocalDate.parse(date),
-                                            state.settings.dateFormat,
-                                        ),
-                                    )
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+        val recent = EntryPolicy.recentHistory(state.entries, state.today)
+        if (recent.isEmpty())
+            Text(tr(R.string.no_sips_recorded), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        recent.forEach { (date, entries) ->
+            GlassCard(Modifier.fillMaxWidth()) {
+                val open = date in expanded
+                Row(
+                    Modifier.fillMaxWidth()
+                        .testTag("history-$date")
+                        .clickable { expanded = if (open) expanded - date else expanded + date }
+                        .semantics(mergeDescendants = true) {
+                            stateDescription =
+                                if (open) tr(R.string.expanded) else tr(R.string.collapsed)
+                            role = Role.Button
+                            contentDescription =
+                                tr(
+                                    R.string.history_value,
+                                    formattedDate(LocalDate.parse(date), state.settings.dateFormat),
+                                )
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        formattedDate(LocalDate.parse(date), state.settings.dateFormat),
+                        Modifier.weight(1f),
+                    )
+                    Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null)
+                }
+                androidx.compose.animation.AnimatedVisibility(
+                    open,
+                    enter =
+                        androidx.compose.animation.expandVertically(
+                            androidx.compose.animation.core.tween(duration)
+                        ) +
+                            androidx.compose.animation.fadeIn(
+                                androidx.compose.animation.core.tween(duration)
+                            ),
+                    exit =
+                        androidx.compose.animation.shrinkVertically(
+                            androidx.compose.animation.core.tween(duration)
+                        ) +
+                            androidx.compose.animation.fadeOut(
+                                androidx.compose.animation.core.tween(duration)
+                            ),
+                ) {
+                    Column {
                         Text(
-                            formattedDate(LocalDate.parse(date), state.settings.dateFormat),
-                            Modifier.weight(1f),
+                            Volume.format(entries.sumOf { it.volume }, state.settings.unit),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
                         )
-                        Icon(
-                            if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                            null,
+                        EntryList(
+                            entries,
+                            state.settings,
+                            onEntry,
+                            framed = false,
+                            today = state.today,
                         )
-                    }
-                    androidx.compose.animation.AnimatedVisibility(
-                        open,
-                        enter =
-                            androidx.compose.animation.expandVertically(
-                                androidx.compose.animation.core.tween(duration)
-                            ) +
-                                androidx.compose.animation.fadeIn(
-                                    androidx.compose.animation.core.tween(duration)
-                                ),
-                        exit =
-                            androidx.compose.animation.shrinkVertically(
-                                androidx.compose.animation.core.tween(duration)
-                            ) +
-                                androidx.compose.animation.fadeOut(
-                                    androidx.compose.animation.core.tween(duration)
-                                ),
-                    ) {
-                        Column {
-                            Text(
-                                Volume.format(entries.sumOf { it.volume }, state.settings.unit),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            EntryList(entries, state.settings, onEntry, framed = false)
-                        }
                     }
                 }
             }
+        }
     }
 }

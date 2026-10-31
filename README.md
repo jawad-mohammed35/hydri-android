@@ -12,7 +12,7 @@ A native Android water tracker with quick logging, useful history and a quiet Li
 
 - Log water in one tap with favorite bottles, or enter a custom amount. Undo a log or swipe a sip away in either direction.
 - Create bottles with your preferred volume, name, icon and color. Set a daily goal that suits you.
-- Explore intake through an interactive calendar, expandable history, charts, streaks and badges.
+- Explore intake through an interactive calendar, charts, streaks and badges. Expand the last seven days of sip history. Today's entries remain editable; past days are read-only. Older records still contribute to your statistics.
 - Choose Light, Dark, OLED Black or Follow System, with six accent colors or Android 12+ Material You colors.
 - Set hydration reminders, active hours and quiet hours with themed time controls.
 - Add responsive home-screen widgets and log from them without opening Hydri. Launcher shortcuts open logging, bottle creation or Tracker directly.
@@ -30,7 +30,7 @@ Real Android emulator captures using sample data:
 
 ## Download and install
 
-1. Open [the stable release](https://github.com/jawad-mohammed35/hydri-android/releases/latest) on your phone and download **Hydri-1.3.0.apk** from Assets.
+1. Open [the stable release](https://github.com/jawad-mohammed35/hydri-android/releases/latest) on your phone and download **Hydri-1.3.1.apk** from Assets.
 2. Open the APK. If Android asks, allow your browser or file manager to install apps, then choose **Install**.
 3. Open Hydri. Existing users should install over the current app **without uninstalling**, so records and preferences stay intact.
 
@@ -52,7 +52,7 @@ Hydri uses Kotlin, Jetpack Compose, Material 3, Navigation, Room, DataStore, Wor
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.3.0 verification](docs/VERIFICATION-1.3.0.md) records the tested scope.
+See [development and data rules](docs/DEVELOPMENT.md) for setup, calculations, QA safeguards and release-build requirements. The original signing file is required for compatible owner release builds; it is never distributed with the source. [Version 1.3.1 verification](docs/VERIFICATION-1.3.1.md) records the tested scope.
 
 Bug reports and contributions are welcome. Discuss larger changes with the maintainer before starting. Contributions intentionally submitted for inclusion are under Apache 2.0 unless explicitly stated otherwise and agreed with the maintainer. Please use [private security reporting](https://github.com/jawad-mohammed35/hydri-android/security/advisories/new) for vulnerabilities and never attach credentials or personal backups to public issues.
 

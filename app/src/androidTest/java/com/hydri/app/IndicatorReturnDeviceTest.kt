@@ -78,6 +78,7 @@ class IndicatorReturnDeviceTest {
         rule.mainClock.autoAdvance = true
         rule.waitForIdle()
         assertTrue("No returning navigation frames sampled", samples > 0)
+        rule.onNodeWithTag("tab-icon-More-filled", useUnmergedTree = true).assertExists()
     }
 
     @Test

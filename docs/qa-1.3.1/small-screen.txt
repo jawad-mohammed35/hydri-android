@@ -1,0 +1,9 @@
+
+com.hydri.app.TrackerRefinementDeviceTest:....
+com.hydri.app.IndicatorReturnDeviceTest:..
+
+Time: 42.881
+
+OK (6 tests)
+
+

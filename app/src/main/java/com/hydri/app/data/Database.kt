@@ -46,6 +46,8 @@ interface HydriDao {
     @Query("SELECT * FROM entries ORDER BY timestamp DESC")
     suspend fun allEntries(): List<WaterEntry>
 
+    @Query("SELECT * FROM entries WHERE id = :id") suspend fun entry(id: String): WaterEntry?
+
     @Query("SELECT * FROM bottles ORDER BY position, name") suspend fun allBottles(): List<Bottle>
 
     @Query("SELECT * FROM goals ORDER BY date") suspend fun allGoals(): List<Goal>

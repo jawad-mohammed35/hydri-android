@@ -297,4 +297,5 @@
         <item quantity="other">Terkunci · %1$s / %2$s hari</item>
     </plurals>
     <string name="settings">Setelan</string>
+    <string name="entry_today_only">Catatan air hanya bisa ditambahkan atau diubah untuk hari ini.</string>
 </resources>

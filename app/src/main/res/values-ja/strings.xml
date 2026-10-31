@@ -297,4 +297,5 @@
         <item quantity="other">未解除・%1$s / %2$s日</item>
     </plurals>
     <string name="settings">設定</string>
+    <string name="entry_today_only">今日の記録のみ追加・変更できます。</string>
 </resources>

@@ -188,6 +188,7 @@ fun EntryDialog(
     s: Settings,
     onDismiss: () -> Unit,
     onDelete: (WaterEntry) -> Unit,
+    today: LocalDate = LocalDate.now(),
     onSave: (Long, LocalDate, Long) -> Unit,
 ) {
     val context = LocalContext.current
@@ -215,7 +216,7 @@ fun EntryDialog(
     GlassEditor(
         if (entry == null) tr(R.string.log_water) else tr(R.string.edit_sip),
         tr(R.string.save_entry),
-        Volume.parse(amount, s.unit) != null && timestamp != null && date <= LocalDate.now(),
+        Volume.parse(amount, s.unit) != null && timestamp != null && date == today,
         onDismiss,
         {
             onSave(
@@ -266,7 +267,7 @@ fun EntryDialog(
             )
         if (zone != ZoneId.systemDefault())
             Text(zone.id, style = MaterialTheme.typography.bodySmall)
-        if (entry != null)
+        if (entry != null && date == today)
             TextButton(onClick = { onDelete(entry) }) {
                 Icon(Icons.Outlined.DeleteOutline, null)
                 Text(tr(R.string.delete_entry), color = MaterialTheme.colorScheme.error)

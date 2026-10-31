@@ -307,4 +307,5 @@
         <item quantity="other">Verrouillé · %1$s / %2$s jours</item>
     </plurals>
     <string name="settings">Paramètres</string>
+    <string name="entry_today_only">Vous pouvez uniquement ajouter ou modifier les prises du jour.</string>
 </resources>

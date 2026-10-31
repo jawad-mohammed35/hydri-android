@@ -322,7 +322,9 @@ class HydriFlowTest {
         // Keep a second current-day sip after Undo; the persisted QA baseline can be from
         // yesterday.
         runBlocking { repo.log(250_000, "QA reset retained") }
-        val past = runBlocking { repo.log(400_000, "QA past", LocalDate.now().minusDays(1)) }
+        val past = runBlocking {
+            repo.seedHistory(400_000, "QA past", LocalDate.now().minusDays(1))
+        }
         val entry = runBlocking { repo.log(350_000, "QA swipe") }
         val row = rule.onNodeWithTag("sip-${entry.id}")
         await { rule.onAllNodesWithTag("sip-${entry.id}").fetchSemanticsNodes().isNotEmpty() }
@@ -389,7 +391,9 @@ class HydriFlowTest {
             LocalTime.of(0, 15),
             Instant.ofEpochMilli(edited.timestamp).atZone(ZoneId.of(edited.zone)).toLocalTime(),
         )
-        val past = runBlocking { repo.log(400_000, "QA history", LocalDate.now().minusDays(1)) }
+        val past = runBlocking {
+            repo.seedHistory(400_000, "QA history", LocalDate.now().minusDays(1))
+        }
         tab("Tracker")
         text("Daily goal").assertDoesNotExist()
         val s = runBlocking { repo.preferences.flow.first() }
@@ -402,12 +406,8 @@ class HydriFlowTest {
         history.clearFloatingNavigation(rule).performClick()
         text("QA history").performScrollTo().assertIsDisplayed()
         capture("history-expanded")
-        tap("QA history")
-        text("Amount (mL)").performTextReplacement("600")
-        tap("Save entry")
-        await {
-            entries().any { it.id == past.id && it.volume == 600_000L && it.date == past.date }
-        }
+        text("QA history").assertHasNoClickAction()
+        assertEquals(400_000L, entries().first { it.id == past.id }.volume)
         exposeAboveNavigation(history)
         history.clearFloatingNavigation(rule).performClick()
         text("QA history").assertDoesNotExist()

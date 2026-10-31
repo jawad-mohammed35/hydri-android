@@ -52,10 +52,10 @@ fun HydriApp(
     var bottleOpen by remember { mutableStateOf(false) }
     var entryEditor by remember { mutableStateOf<WaterEntry?>(null) }
     var entryOpen by remember { mutableStateOf(false) }
-    var entryDate by remember { mutableStateOf<LocalDate?>(null) }
     var goalOpen by remember { mutableStateOf(false) }
     var resetTodayOpen by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
+    LaunchedEffect(state.today) { entryOpen = false }
     val permission =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (!granted)
@@ -126,7 +126,6 @@ fun HydriApp(
                             LauncherShortcuts.LOG_WATER -> {
                                 openPrimary("Home")
                                 entryEditor = null
-                                entryDate = null
                                 entryOpen = true
                             }
                             LauncherShortcuts.CREATE_BOTTLE -> {
@@ -221,12 +220,13 @@ fun HydriApp(
                                     },
                                     onCustom = {
                                         entryEditor = null
-                                        entryDate = null
                                         entryOpen = true
                                     },
                                     onEntry = {
-                                        entryEditor = it
-                                        entryOpen = true
+                                        if (EntryPolicy.canModify(it.date, state.today)) {
+                                            entryEditor = it
+                                            entryOpen = true
+                                        }
                                     },
                                     onUndo = vm::undoToday,
                                     onReset = { resetTodayOpen = true },
@@ -257,13 +257,16 @@ fun HydriApp(
                                 TrackerScreen(
                                     state,
                                     onEntry = {
-                                        entryEditor = it
-                                        entryOpen = true
+                                        if (EntryPolicy.canModify(it.date, state.today)) {
+                                            entryEditor = it
+                                            entryOpen = true
+                                        }
                                     },
                                     onAdd = { date ->
-                                        entryEditor = null
-                                        entryDate = date
-                                        entryOpen = true
+                                        if (date == state.today) {
+                                            entryEditor = null
+                                            entryOpen = true
+                                        }
                                     },
                                 )
                             }
@@ -313,51 +316,18 @@ fun HydriApp(
             if (entryOpen)
                 EntryDialog(
                     entryEditor,
-                    entryDate ?: state.today,
+                    state.today,
                     state.settings,
                     { entryOpen = false },
                     onDelete = { e ->
                         vm.delete(e)
                         entryOpen = false
                     },
+                    today = state.today,
                 ) { volume, date, time ->
                     val editing = entryEditor
-                    if (editing == null) {
-                        val targetDate = entryDate ?: LocalDate.now()
-                        val targetTime =
-                            if (targetDate == date) time
-                            else
-                                EntryTime.resolve(
-                                    targetDate,
-                                    Instant.ofEpochMilli(time)
-                                        .atZone(ZoneId.systemDefault())
-                                        .toLocalTime(),
-                                    ZoneId.systemDefault(),
-                                )
-                        if (targetTime == null) {
-                            vm.action {
-                                throw UserMessage(
-                                    tr(
-                                        R.string
-                                            .the_local_date_changed_choose_a_valid_time_for_today
-                                    )
-                                )
-                            }
-                            return@EntryDialog
-                        }
-                        vm.log(volume, "Custom water", targetDate, targetTime)
-                    } else
-                        vm.action {
-                            if (vm.repo.dao.allGoals().none { it.date <= date.toString() })
-                                vm.repo.dao.putGoal(Goal(date.toString(), state.goal(date)))
-                            vm.repo.dao.putEntry(
-                                editing.copy(
-                                    volume = volume,
-                                    date = date.toString(),
-                                    timestamp = time,
-                                )
-                            )
-                        }
+                    if (editing == null) vm.log(volume, "Custom water", date, time)
+                    else vm.action { vm.repo.updateEntry(editing.id, volume, time) }
                     entryOpen = false
                 }
             if (goalOpen)

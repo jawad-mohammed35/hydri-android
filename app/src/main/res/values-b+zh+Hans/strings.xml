@@ -297,4 +297,5 @@
         <item quantity="other">未解锁 · %1$s / %2$s 天</item>
     </plurals>
     <string name="settings">设置</string>
+    <string name="entry_today_only">只能添加或修改今天的饮水记录。</string>
 </resources>

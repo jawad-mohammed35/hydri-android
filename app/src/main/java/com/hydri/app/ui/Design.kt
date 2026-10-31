@@ -269,6 +269,8 @@ fun Symbol(
     }
 }
 
+val GoalExceededBlend = SemanticsPropertyKey<Float>("GoalExceededBlend")
+
 @Composable
 fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = false) {
     val ratio = (total.toFloat() / goal).coerceIn(0f, 1f)
@@ -279,11 +281,27 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             label = tr(R.string.water_progress),
         )
     val primary = MaterialTheme.colorScheme.primary
+    val exceeded by
+        animateFloatAsState(
+            if (total > goal) 1f else 0f,
+            tween(if (LocalReducedMotion.current) 0 else 400),
+            label = "Exceeded goal appearance",
+        )
+    val energized =
+        remember(primary) {
+            val hsv = FloatArray(3)
+            android.graphics.Color.colorToHSV(primary.toArgb(), hsv)
+            hsv[1] = (hsv[1] * 1.12f + .06f).coerceAtMost(.96f)
+            hsv[2] = (hsv[2] * 1.12f).coerceAtMost(1f)
+            Color(android.graphics.Color.HSVToColor(hsv))
+        }
+    val ring = lerp(primary, energized, exceeded)
     val track = MaterialTheme.colorScheme.surfaceVariant
     Box(
         Modifier.fillMaxWidth().height(if (compact) 224.dp else 278.dp).semantics(
             mergeDescendants = true
         ) {
+            this[GoalExceededBlend] = exceeded
             contentDescription =
                 tr(
                     R.string.value_of_value_value_percent,
@@ -298,8 +316,31 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             val stroke = 12.dp.toPx()
             val inset = stroke / 2
             drawCircle(track, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+            if (exceeded > 0f) {
+                drawCircle(
+                    Brush.radialGradient(
+                        0f to Color.Transparent,
+                        .78f to Color.Transparent,
+                        .90f to energized.copy(alpha = .15f * exceeded),
+                        1f to Color.Transparent,
+                        radius = size.minDimension / 2,
+                    )
+                )
+            }
             drawArc(
-                Brush.sweepGradient(listOf(primary.copy(alpha = .35f), primary)),
+                Brush.sweepGradient(
+                    if (exceeded == 0f) listOf(primary.copy(alpha = .35f), primary)
+                    else
+                        listOf(
+                            lerp(primary.copy(alpha = .35f), ring, exceeded),
+                            lerp(
+                                lerp(primary.copy(alpha = .35f), primary, .5f),
+                                lerp(ring, Color.White, .28f),
+                                exceeded,
+                            ),
+                            ring,
+                        )
+                ),
                 -90f,
                 360f * progress,
                 false,

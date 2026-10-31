@@ -150,7 +150,7 @@ class PolishDeviceTest {
     fun resetUsesGlassAndCancelKeepsTodayWhileResetKeepsOtherDays() {
         val today = runBlocking { repo.log(321_000, "QA reset today") }
         val past = runBlocking {
-            repo.log(432_000, "QA reset history", LocalDate.now().minusDays(1))
+            repo.seedHistory(432_000, "QA reset history", LocalDate.now().minusDays(1))
         }
         for ((index, appearance) in appearances.withIndex()) {
             theme(appearance)

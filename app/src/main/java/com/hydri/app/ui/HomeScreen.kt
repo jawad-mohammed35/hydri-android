@@ -137,7 +137,7 @@ fun HomeScreen(
         }
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SectionTitle(tr(R.string.today_s_sips))
-            EntryList(entries, s, onEntry, onDelete)
+            EntryList(entries, s, onEntry, onDelete, today = state.today)
         }
     }
 }
@@ -150,6 +150,7 @@ fun EntryList(
     onEntry: (WaterEntry) -> Unit,
     onDelete: ((WaterEntry) -> Unit)? = null,
     framed: Boolean = true,
+    today: java.time.LocalDate = java.time.LocalDate.now(),
 ) {
     if (entries.isEmpty())
         Text(tr(R.string.no_sips_recorded), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -157,7 +158,8 @@ fun EntryList(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             entries.forEach { e ->
                 key(e.id) {
-                    if (onDelete != null) {
+                    val editable = EntryPolicy.canModify(e.date, today)
+                    if (onDelete != null && editable) {
                         val delete by rememberUpdatedState(onDelete)
                         val dismiss = rememberSwipeToDismissBoxState()
                         LaunchedEffect(dismiss.currentValue) {
@@ -195,9 +197,9 @@ fun EntryList(
                                 }
                             },
                         ) {
-                            SipRow(e, s, onEntry, framed, onDelete)
+                            SipRow(e, s, onEntry, framed, onDelete, true)
                         }
-                    } else SipRow(e, s, onEntry, framed, null)
+                    } else SipRow(e, s, onEntry, framed, null, editable)
                 }
             }
         }
@@ -210,6 +212,7 @@ private fun SipRow(
     onEntry: (WaterEntry) -> Unit,
     framed: Boolean,
     onDelete: ((WaterEntry) -> Unit)?,
+    editable: Boolean,
 ) {
     val system24 = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     Surface(
@@ -221,10 +224,10 @@ private fun SipRow(
     ) {
         Row(
             Modifier.fillMaxWidth()
-                .clickable { onEntry(e) }
+                .then(if (editable) Modifier.clickable { onEntry(e) } else Modifier)
                 .padding(if (framed) 16.dp else 6.dp)
                 .semantics(mergeDescendants = true) {
-                    role = Role.Button
+                    if (editable) role = Role.Button
                     if (onDelete != null)
                         customActions =
                             listOf(
@@ -259,7 +262,7 @@ private fun SipRow(
                 )
             }
             Text(Volume.format(e.volume, s.unit), style = MaterialTheme.typography.bodyMedium)
-            Icon(Icons.Outlined.ChevronRight, tr(R.string.edit_sip))
+            if (editable) Icon(Icons.Outlined.ChevronRight, tr(R.string.edit_sip))
         }
     }
 }

@@ -18,14 +18,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.*
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.hydri.app.R
 import com.hydri.app.domain.TabPosition
 import com.hydri.app.i18n.routeLabel
 
@@ -180,7 +183,7 @@ fun SlidingNavigation(
                                         Icons.Filled.Home,
                                         Icons.Filled.WaterDrop,
                                         Icons.Filled.CalendarMonth,
-                                        Icons.Filled.GridView,
+                                        ImageVector.vectorResource(R.drawable.ic_more_solid),
                                     )[i]
                                 else icons[i],
                                 null,

@@ -53,7 +53,7 @@ class RepositoryDeviceTest {
                     accent = 2,
                 )
             )
-            repo.log(473176, "=formula", LocalDate.now().minusDays(1))
+            repo.seedHistory(473176, "=formula", LocalDate.now().minusDays(1))
             repo.goal(3_000_000)
             val snapshot = repo.backup()
             val csv = repo.csv()
@@ -87,7 +87,7 @@ class RepositoryDeviceTest {
         val repo = Repository(first, PreferenceStore(context))
         repo.initialize()
         val yesterday = LocalDate.now().minusDays(1)
-        repo.log(500_000, "Glass", yesterday)
+        repo.seedHistory(500_000, "Glass", yesterday)
         repo.goal(3_000_000)
         first.close()
         val second = Room.databaseBuilder(context, HydriDatabase::class.java, file).build()

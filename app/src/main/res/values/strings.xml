@@ -310,4 +310,5 @@
         <item quantity="other">Locked · %1$s / %2$s days</item>
     </plurals>
     <string name="settings">Settings</string>
+    <string name="entry_today_only">Water entries can only be added or changed for today.</string>
 </resources>

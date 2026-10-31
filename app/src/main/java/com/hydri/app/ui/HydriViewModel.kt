@@ -111,11 +111,13 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun delete(entry: WaterEntry) = action {
-        repo.dao.deleteEntry(entry.id)
-        messages.emit(tr(R.string.entry_deleted) to { action { repo.dao.putEntry(entry) } })
+        val deleted = repo.deleteEntry(entry.id) ?: return@action
+        messages.emit(
+            tr(R.string.entry_deleted) to { action { repo.restoreDeletedEntry(deleted) } }
+        )
     }
 
-    fun undo(entry: WaterEntry) = action { repo.dao.deleteEntry(entry.id) }
+    fun undo(entry: WaterEntry) = action { repo.deleteEntry(entry.id) }
 
     fun undoToday() = action {
         val today = LocalDate.now().toString()
@@ -124,12 +126,12 @@ class HydriViewModel(application: Application) : AndroidViewModel(application) {
             recentLogs.asReversed().firstNotNullOfOrNull { id -> entries.find { it.id == id } }
                 ?: entries.firstOrNull()
         if (latest != null) {
-            repo.dao.deleteEntry(latest.id)
+            repo.deleteEntry(latest.id)
             recentLogs.remove(latest.id)
         }
     }
 
-    fun resetToday() = action { repo.dao.clearEntriesOn(LocalDate.now().toString()) }
+    fun resetToday() = action { repo.resetToday() }
 
     fun goal(volume: Long) = action {
         repo.goal(volume)

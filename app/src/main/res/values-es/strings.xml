@@ -307,4 +307,5 @@
         <item quantity="other">Bloqueado · %1$s / %2$s días</item>
     </plurals>
     <string name="settings">Ajustes</string>
+    <string name="entry_today_only">Solo puedes añadir o cambiar registros de hoy.</string>
 </resources>
