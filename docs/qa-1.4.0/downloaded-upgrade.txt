@@ -1,0 +1,8 @@
+
+com.hydri.app.UpgradeDeviceTest:.
+
+Time: 0.109
+
+OK (1 test)
+
+
