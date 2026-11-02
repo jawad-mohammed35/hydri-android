@@ -308,4 +308,11 @@
     </plurals>
     <string name="settings">Ajustes</string>
     <string name="entry_today_only">Solo puedes añadir o cambiar registros de hoy.</string>
+    <string name="travel_mug">Taza de viaje</string>
+    <string name="drink_can">Lata</string>
+    <string name="mason_jar">Tarro con asa</string>
+    <string name="tall_glass">Vaso alto</string>
+    <string name="insulated_flask">Termo</string>
+    <string name="straw_tumbler">Vaso con pajita</string>
+    <string name="squeeze_bottle">Botella deportiva flexible</string>
 </resources>

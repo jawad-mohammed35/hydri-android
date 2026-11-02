@@ -298,4 +298,11 @@
     </plurals>
     <string name="settings">설정</string>
     <string name="entry_today_only">오늘의 음수 기록만 추가하거나 변경할 수 있어요.</string>
+    <string name="travel_mug">여행용 머그</string>
+    <string name="drink_can">캔</string>
+    <string name="mason_jar">메이슨 자</string>
+    <string name="tall_glass">긴 유리잔</string>
+    <string name="insulated_flask">보온병</string>
+    <string name="straw_tumbler">빨대 텀블러</string>
+    <string name="squeeze_bottle">스퀴즈 물병</string>
 </resources>

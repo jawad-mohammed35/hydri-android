@@ -298,4 +298,11 @@
     </plurals>
     <string name="settings">Setelan</string>
     <string name="entry_today_only">Catatan air hanya bisa ditambahkan atau diubah untuk hari ini.</string>
+    <string name="travel_mug">Mug perjalanan</string>
+    <string name="drink_can">Kaleng</string>
+    <string name="mason_jar">Stoples Mason</string>
+    <string name="tall_glass">Gelas tinggi</string>
+    <string name="insulated_flask">Termos</string>
+    <string name="straw_tumbler">Tumbler sedotan</string>
+    <string name="squeeze_bottle">Botol tekan</string>
 </resources>

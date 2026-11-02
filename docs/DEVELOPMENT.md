@@ -1,6 +1,6 @@
 # Development and data rules
 
-Version 1.3.0 adds seven offline languages and native per-app language preferences; see [localization maintenance](LOCALIZATION.md). The database remains schema 2. Current verification is recorded in [1.3.1 verification](VERIFICATION-1.3.1.md); older reports below describe their respective releases.
+Version 1.3.0 adds seven offline languages and native per-app language preferences; see [localization maintenance](LOCALIZATION.md). The database remains schema 2. Current verification is recorded in [1.4.0 verification](VERIFICATION-1.4.0.md); older reports below describe their respective releases.
 
 Run the commands below from the repository root. Hydri is licensed under Apache License 2.0; see the root LICENSE and third-party notices.
 
@@ -40,8 +40,8 @@ Debug output is at `app/build/outputs/apk/debug/app-debug.apk`. For owner releas
 - Five-step setup: welcome, name, live appearance preview, measurements, and preset/custom goal. Default bottles are added automatically; notifications are configured later.
 - Four floating navigation tabs: Home, Bottles, Tracker, More. Tap or drag across the glass indicator to switch tabs, with optional haptics and keyboard focus feedback. In-page links and launcher shortcuts share tab navigation.
 - Favorites-only quick-add, silent successful logging, swipe-to-delete in either direction with Undo, daily Undo and confirmed today-only Reset. Glass editors support custom amounts, fixed-date/time edits, immediate entry deletion, and bottle previews.
-- Bottle creation, names, volumes, seven icon choices, six colors, favorites, and reorder controls.
-- Monthly calendar, expandable sip history by date, interactive day/week/month charts, averages, completion rates, streaks, and six badges. Expandable Sip History includes only recorded dates from today through six calendar days ago. Only today supports entry logging, editing and per-entry deletion; past calendar days remain available for totals and charts.
+- Bottle creation, names, volumes, fourteen icon choices, six colors, favorites, and reorder controls.
+- Monthly calendar, expandable sip history by date, interactive Week/Month charts, averages, completion rates, streaks, and six badges. Expandable Sip History includes only recorded dates from today through six calendar days ago. Home is the logging entry point; today-only editing/deletion remains available from sip history. Calendar month swipes and arrows retain date selection and historical indicators. Past calendar days remain available for review.
 - Dated daily goals, themes (system/light/dark), OLED backgrounds, six accents plus Android 12+ Material You device colors, reduced motion, haptics, metric/US fl oz, date/time preferences.
 - Approximate WorkManager reminders, active hours, quiet hours, weekdays, stop-at-goal, evening check-in, completion notifications, sound/vibration preferences, permission-aware notifications.
 - Themed glass reminder-time editors support 12/24-hour input, AM/PM, validation, keyboard handling, and animated Save/Cancel.
@@ -56,7 +56,7 @@ Debug output is at `app/build/outputs/apk/debug/app-debug.apk`. For owner releas
 - Entries store an instant, original zone, and explicit local date. Traveling does not move previously logged water between days. New entries use the current zone. Entry timestamps and today-only edits use the entry's original zone, shown in the editor and beside times when traveling. Amount-only edits preserve the original instant, including during a DST overlap. Entries keep their original calendar date when edited. Home, Tracker, widget and shortcut logs use the current local date. The repository rejects other dates, stale edits/deletions and next-day Undo, reading the stored row inside its transaction. Editors close when the UI observes a date change. Time edits reject nonexistent DST times instead of silently shifting dates.
 - Home follows the current local date and updates while open. Historical records are retained at midnight. Goals are effective from their stored local date until the next goal change; changing today's goal preserves earlier values. Empty dates after tracking began count as incomplete. Existing/imported earlier records extend tracking to their original dates using the earliest goal. Interactive backdating is disabled.
 - A day counts once when its total meets its goal. More water earns no extra streak credit. An unfinished today does not break yesterday's ongoing streak. A missed past day does. Badges are derived from records on each update; editing or deleting entries can revoke a badge or change its unlock date. This rule is visible in Tracker.
-- Calendar weeks begin Monday. Week charts show the trailing seven days. Monthly charts show the displayed calendar month through today. Daily charts show the selected date. Averages include all tracked elapsed dates in that period, including zero-intake days and today.
+- Calendar weeks begin Monday. Week charts show the trailing seven days. Monthly charts show the displayed calendar month through today. The removed Day range falls back to Week when restored. Averages include all tracked elapsed dates in that period, including zero-intake days and today.
 - Data is in app-private Room and DataStore files. Android automatic cloud backup is disabled. JSON backups include entries, dated goals, bottles and preferences; imported files are limited to 10 MB and validated before replacement. CSV includes volume, effective goal, original zone and UTC timestamp. CSV is an export, not a restore format.
 
 ## Reminder behavior
@@ -111,7 +111,7 @@ adb -s emulator-5580 shell am instrument -w -e hydriQa true -e class com.hydri.a
 
 `UpgradeDeviceTest` also requires `upgrade-1.2.1.json` in the app's external-files directory and skips when it is absent. Before upgrading the QA installation, `BaselineCaptureDeviceTest` captures it only with `-e captureBaseline true`. `WidgetSyncDeviceTest` temporarily changes the QA emulator's palette/night mode, restores them afterward, and requires shell widget-binding permission. Do not enable QA tests on a phone containing personal records.
 
-See [1.3.1 verification](VERIFICATION-1.3.1.md) for current results, [1.3.0 verification](VERIFICATION-1.3.0.md), [1.2.2 verification](VERIFICATION-1.2.2.md), [1.2.1 verification](VERIFICATION-1.2.1.md), [1.2.0 verification](VERIFICATION-1.2.0.md), [1.1.0 verification](VERIFICATION-1.1.0.md) and [original verification](VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
+See [1.4.0 verification](VERIFICATION-1.4.0.md) for current results, [1.3.1 verification](VERIFICATION-1.3.1.md), [1.3.0 verification](VERIFICATION-1.3.0.md), [1.2.2 verification](VERIFICATION-1.2.2.md), [1.2.1 verification](VERIFICATION-1.2.1.md), [1.2.0 verification](VERIFICATION-1.2.0.md), [1.1.0 verification](VERIFICATION-1.1.0.md) and [original verification](VERIFICATION.md) for prior releases. A successful build is not a substitute for the owner's testing across devices.
 
 ## Release status
 
@@ -120,3 +120,5 @@ GitHub hosts the public source and versioned stable releases. APK binaries are a
 Windows builds can encounter a temporary Gradle transform-cache rename lock. Stop Gradle daemons and retry with --no-watch-fs and --max-workers=1. Do not disable antivirus protection or delete the signing keystore to resolve a cache problem.
 
 Per-entry date restrictions do not remove the existing explicitly confirmed Data & Backup operations: restore, delete all history, and full reset remain deliberate bulk data-management actions. They are separate from daily logging and per-entry editing. No schema change is required for 1.3.1; all original records, including those outside the seven-day presentation window, stay stored.
+
+Bottle shape IDs 0-6 retain their original icons. IDs 7-13 append travel mug, can, mason jar, tall glass, insulated flask, straw tumbler and squeeze bottle. Both live bottle IDs and sip snapshot IDs validate against BottleShape. Never renumber or reuse a stored ID; append future choices and keep the shared icon/name catalog aligned. Room remains schema 2 and backup format remains 1. Restoring a backup with new shapes requires a version that recognizes their IDs.

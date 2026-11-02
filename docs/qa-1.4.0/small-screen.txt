@@ -1,0 +1,10 @@
+
+com.hydri.app.CalendarAndShapesDeviceTest:....
+com.hydri.app.BottleShapeUiDeviceTest:.
+com.hydri.app.IndicatorReturnDeviceTest:..
+
+Time: 56.003
+
+OK (7 tests)
+
+

@@ -42,7 +42,7 @@ class TrackerRefinementDeviceTest {
     }
 
     @Test
-    fun calendarKeepsOlderTotalsAndBadgesButOffersLoggingOnlyForToday() {
+    fun calendarKeepsOlderTotalsAndBadgesWithoutLoggingControls() {
         val today = LocalDate.of(2026, 11, 14)
         val records =
             listOf(today.minusDays(1), today.minusDays(40)).map { date ->
@@ -67,13 +67,9 @@ class TrackerRefinementDeviceTest {
                 goals = listOf(Goal(today.minusDays(40).toString(), 250_000)),
                 ready = true,
             )
-        val added = mutableListOf<LocalDate>()
-        show {
-            HydriTheme(state.settings) { Surface { TrackerScreen(state, {}, { added.add(it) }) } }
-        }
+        show { HydriTheme(state.settings) { Surface { TrackerScreen(state, {}) } } }
         val logLabel = com.hydri.app.i18n.tr(R.string.log_water)
-        rule.onNodeWithText(logLabel).performScrollTo().performClick()
-        assertEquals(listOf(today), added)
+        rule.onNodeWithText(logLabel).assertDoesNotExist()
         rule
             .onNode(
                 hasContentDescription(today.minusDays(1).toString(), substring = true) and

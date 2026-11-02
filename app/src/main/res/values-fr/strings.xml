@@ -308,4 +308,11 @@
     </plurals>
     <string name="settings">Paramètres</string>
     <string name="entry_today_only">Vous pouvez uniquement ajouter ou modifier les prises du jour.</string>
+    <string name="travel_mug">Mug de voyage</string>
+    <string name="drink_can">Canette</string>
+    <string name="mason_jar">Bocal avec anse</string>
+    <string name="tall_glass">Grand verre</string>
+    <string name="insulated_flask">Bouteille isotherme</string>
+    <string name="straw_tumbler">Gobelet avec paille</string>
+    <string name="squeeze_bottle">Gourde souple</string>
 </resources>

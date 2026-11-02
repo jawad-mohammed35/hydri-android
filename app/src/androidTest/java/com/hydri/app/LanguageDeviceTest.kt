@@ -231,6 +231,16 @@ class LanguageDeviceTest {
                 .assertExists()
             assertVisibleTextFits()
             rule.onNode(hasText(tr(R.string.shape)) and hasAnyAncestor(isDialog())).assertExists()
+            rule.onNodeWithTag("bottle-shapes").performScrollTo()
+            rule
+                .onNode(
+                    hasContentDescription(tr(R.string.squeeze_bottle)) and
+                        hasAnyAncestor(hasTestTag("bottle-shapes"))
+                )
+                .performScrollTo()
+                .performClick()
+            rule.onNodeWithText(tr(R.string.squeeze_bottle)).assertExists()
+            assertVisibleTextFits()
             tap(tr(R.string.cancel))
             tab("Tracker")
             rule.onNodeWithText(tr(R.string.badges)).performScrollTo().assertExists()

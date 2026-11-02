@@ -262,12 +262,6 @@ fun HydriApp(
                                             entryOpen = true
                                         }
                                     },
-                                    onAdd = { date ->
-                                        if (date == state.today) {
-                                            entryEditor = null
-                                            entryOpen = true
-                                        }
-                                    },
                                 )
                             }
                             navigation(startDestination = "More", route = "MoreSection") {

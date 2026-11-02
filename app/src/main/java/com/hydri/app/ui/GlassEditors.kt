@@ -156,22 +156,40 @@ fun BottleDialog(
             },
             unit,
         )
-        Text(tr(R.string.shape), style = MaterialTheme.typography.labelLarge)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                tr(R.string.shape),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            Text(
+                bottleNames[icon],
+                Modifier.weight(1.4f),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Row(
             Modifier.testTag("bottle-shapes").horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            bottleIcons.forEachIndexed { i, image ->
-                IconButton(
-                    { icon = i },
-                    Modifier.background(
-                            if (icon == i) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .35f),
-                            RoundedCornerShape(16.dp),
-                        )
-                        .semantics { selected = icon == i },
-                ) {
-                    Icon(image, bottleNames[i])
+            bottleIcons.indices.chunked(2).forEach { column ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    column.forEach { i ->
+                        IconButton(
+                            { icon = i },
+                            Modifier.background(
+                                    if (icon == i) MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .35f),
+                                    RoundedCornerShape(16.dp),
+                                )
+                                .semantics { selected = icon == i },
+                        ) {
+                            Icon(bottleIcons[i], bottleNames[i])
+                        }
+                    }
                 }
             }
         }

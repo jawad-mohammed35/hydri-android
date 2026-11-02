@@ -298,4 +298,11 @@
     </plurals>
     <string name="settings">设置</string>
     <string name="entry_today_only">只能添加或修改今天的饮水记录。</string>
+    <string name="travel_mug">旅行杯</string>
+    <string name="drink_can">易拉罐</string>
+    <string name="mason_jar">梅森杯</string>
+    <string name="tall_glass">高玻璃杯</string>
+    <string name="insulated_flask">保温瓶</string>
+    <string name="straw_tumbler">吸管杯</string>
+    <string name="squeeze_bottle">挤压式水壶</string>
 </resources>

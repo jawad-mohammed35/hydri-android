@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +21,6 @@ import com.hydri.app.data.*
 import com.hydri.app.domain.*
 import com.hydri.app.i18n.*
 import java.time.*
-import java.time.format.TextStyle
 
 @Composable
 fun BottlesScreen(
@@ -101,11 +99,18 @@ fun BottlesScreen(
 }
 
 @Composable
-fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDate) -> Unit) {
+fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit) {
     var selectedText by rememberSaveable { mutableStateOf(state.today.toString()) }
     var monthText by rememberSaveable { mutableStateOf(YearMonth.from(state.today).toString()) }
     var period by rememberSaveable { mutableStateOf("Week") }
     var selectedBar by rememberSaveable { mutableStateOf<String?>(null) }
+    val activePeriod = TrackerRanges.period(period)
+    LaunchedEffect(period) {
+        if (period != activePeriod) {
+            period = activePeriod
+            selectedBar = null
+        }
+    }
     val selected = LocalDate.parse(selectedText)
     val month = YearMonth.parse(monthText)
     val stats = state.statistics
@@ -131,155 +136,42 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
                 Text(tr(R.string.longest_streak), style = MaterialTheme.typography.bodySmall)
             }
         }
-        GlassCard(Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { monthText = month.minusMonths(1).toString() }) {
-                    Icon(Icons.Outlined.ChevronLeft, tr(R.string.previous_month))
-                }
-                Text(
-                    formattedMonth(month),
-                    Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                IconButton(
-                    onClick = { monthText = month.plusMonths(1).toString() },
-                    enabled = month < YearMonth.from(state.today),
-                ) {
-                    Icon(Icons.Outlined.ChevronRight, tr(R.string.next_month))
-                }
-            }
-            Row {
-                (1..7).forEach { day ->
-                    Text(
-                        DayOfWeek.of(day).getDisplayName(TextStyle.NARROW, AppText.locale),
-                        Modifier.weight(1f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
-            }
-            val offset = month.atDay(1).dayOfWeek.value - 1
-            val cells = (offset + month.lengthOfMonth() + 6) / 7 * 7
-            (0 until cells step 7).forEach { row ->
-                Row {
-                    (row until row + 7).forEach { cell ->
-                        val number = cell - offset + 1
-                        if (number !in 1..month.lengthOfMonth())
-                            Spacer(Modifier.weight(1f).height(48.dp))
-                        else {
-                            val date = month.atDay(number)
-                            val total = state.total(date)
-                            val goal = state.goal(date)
-                            val status =
-                                when {
-                                    date > state.today -> tr(R.string.future)
-                                    date < start -> tr(R.string.before_tracking)
-                                    total > goal -> tr(R.string.exceeded)
-                                    total >= goal -> tr(R.string.completed)
-                                    else -> tr(R.string.incomplete)
-                                }
-                            val color =
-                                when (status) {
-                                    tr(R.string.exceeded) -> MaterialTheme.colorScheme.tertiary
-                                    tr(R.string.completed) -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            Column(
-                                Modifier.weight(1f)
-                                    .heightIn(min = 48.dp)
-                                    .padding(2.dp)
-                                    .background(
-                                        if (date == selected)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = .16f)
-                                        else Color.Transparent,
-                                        RoundedCornerShape(12.dp),
-                                    )
-                                    .then(
-                                        if (date == state.today)
-                                            Modifier.border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.primary,
-                                                RoundedCornerShape(12.dp),
-                                            )
-                                        else Modifier
-                                    )
-                                    .clickable(enabled = date <= state.today) {
-                                        selectedText = date.toString()
-                                    }
-                                    .semantics(mergeDescendants = true) {
-                                        contentDescription =
-                                            tr(
-                                                R.string.value_value_value,
-                                                formattedDate(date, s.dateFormat),
-                                                status,
-                                                if (date == state.today) tr(R.string.today_suffix)
-                                                else "",
-                                            )
-                                        this.selected = date == selected
-                                    },
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
-                            ) {
-                                Text(
-                                    AppText.number(number),
-                                    color =
-                                        if (date > state.today) color.copy(alpha = .35f) else color,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                                Text(
-                                    when (status) {
-                                        tr(R.string.exceeded) -> "+"
-                                        tr(R.string.completed) -> "✓"
-                                        tr(R.string.incomplete) -> "·"
-                                        else -> " "
-                                    },
-                                    color = color,
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            Text(
-                tr(R.string.incomplete_completed_exceeded_noutlined_today_blank_before),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        GlassCard(Modifier.fillMaxWidth()) {
-            SectionTitle(
-                formattedDate(selected, s.dateFormat),
-                if (selected == state.today) tr(R.string.log_water) else null,
-                { onAdd(selected) },
-            )
-            Text(
-                "${Volume.format(state.total(selected),s.unit)} / ${Volume.format(state.goal(selected),s.unit)}",
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        TrackerCalendar(
+            state,
+            month,
+            selected,
+            onMonth = {
+                monthText = it.toString()
+                if (activePeriod == "Month") selectedBar = null
+            },
+            onSelect = { selectedText = it.toString() },
+        )
         SipHistory(state, onEntry)
         GlassCard(Modifier.fillMaxWidth()) {
             SectionTitle(tr(R.string.intake))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Day", "Week", "Month").forEach {
-                    Choice(it, period == it) {
-                        period = it
-                        selectedBar = null
-                    }
+            Row(
+                Modifier.fillMaxWidth().testTag("intake-range"),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf("Week", "Month").forEach { value ->
+                    FilterChip(
+                        selected = activePeriod == value,
+                        onClick = {
+                            period = value
+                            selectedBar = null
+                        },
+                        modifier = Modifier.weight(1f).testTag("intake-range-$value"),
+                        label = {
+                            Text(
+                                displaySetting(value),
+                                Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            )
+                        },
+                    )
                 }
             }
-            val dates =
-                when (period) {
-                    "Day" -> listOf(selected)
-                    "Month" ->
-                        (1..month.lengthOfMonth())
-                            .map { month.atDay(it) }
-                            .filter { it <= state.today }
-                    else -> (6 downTo 0).map { state.today.minusDays(it.toLong()) }
-                }
+            val dates = TrackerRanges.dates(activePeriod, month, state.today)
             val activeDates = dates.filter { it >= start }
             val sum = dates.sumOf { state.total(it) }
             val complete = activeDates.count { state.total(it) >= state.goal(it) }
@@ -288,7 +180,7 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
             if (dates.isEmpty()) Text(tr(R.string.this_month_has_no_recorded_days_yet))
             else
                 Row(
-                    Modifier.fillMaxWidth().height(140.dp),
+                    Modifier.fillMaxWidth().height(140.dp).testTag("intake-bars"),
                     horizontalArrangement =
                         Arrangement.spacedBy(if (dates.size > 7) 3.dp else 8.dp),
                     verticalAlignment = Alignment.Bottom,
@@ -298,6 +190,7 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
                         val height = (total / max * 110).coerceAtLeast(3f)
                         Column(
                             Modifier.weight(1f)
+                                .testTag("intake-bar-$date")
                                 .fillMaxHeight()
                                 .clickable { selectedBar = date.toString() }
                                 .semantics(mergeDescendants = true) {
@@ -326,7 +219,7 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
                             )
                             if (dates.size <= 7)
                                 Text(
-                                    date.dayOfMonth.toString(),
+                                    AppText.number(date.dayOfMonth),
                                     style = MaterialTheme.typography.labelSmall,
                                 )
                         }
@@ -359,19 +252,10 @@ fun TrackerScreen(state: UiState, onEntry: (WaterEntry) -> Unit, onAdd: (LocalDa
                 ),
                 style = MaterialTheme.typography.bodySmall,
             )
-            Text(
-                plural(R.plurals.completed_days_overall, stats.completed),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionTitle(tr(R.string.badges))
-            Text(
-                tr(R.string.badges_reflect_your_recorded_goals_editing_history_can_cha),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+
             stats.badges.forEachIndexed { index, badge ->
                 GlassCard(Modifier.fillMaxWidth()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

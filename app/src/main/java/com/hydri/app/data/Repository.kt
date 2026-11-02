@@ -249,7 +249,7 @@ class Repository(
                         ZoneId.of(j.getString("zone")).id,
                         if (j.isNull("bottleId")) null else idValue(j.getString("bottleId")),
                         if (j.isNull("bottleIcon")) null
-                        else j.getInt("bottleIcon").also { require(it in 0..6) },
+                        else j.getInt("bottleIcon").also { require(BottleShape.isValid(it)) },
                         if (j.isNull("bottleColor")) null
                         else j.getInt("bottleColor").also { require(it in 0..5) },
                     )
@@ -260,7 +260,7 @@ class Repository(
                         id(j),
                         name(j),
                         volume(j),
-                        j.getInt("icon").also { require(it in 0..6) },
+                        j.getInt("icon").also { require(BottleShape.isValid(it)) },
                         j.getInt("color").also { require(it in 0..5) },
                         j.getBoolean("favorite"),
                         j.getInt("position").also { require(it >= 0) },

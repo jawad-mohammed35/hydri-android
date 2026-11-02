@@ -59,7 +59,7 @@ val bottleIcons =
         Icons.Outlined.FitnessCenter,
         Icons.Outlined.EmojiFoodBeverage,
         Icons.Outlined.Category,
-    )
+    ) + additionalBottleIcons
 val bottleNames
     get() =
         listOf(
@@ -70,6 +70,13 @@ val bottleNames
             tr(R.string.sports_bottle),
             tr(R.string.mug),
             tr(R.string.custom_container),
+            tr(R.string.travel_mug),
+            tr(R.string.drink_can),
+            tr(R.string.mason_jar),
+            tr(R.string.tall_glass),
+            tr(R.string.insulated_flask),
+            tr(R.string.straw_tumbler),
+            tr(R.string.squeeze_bottle),
         )
 val LocalReducedMotion = staticCompositionLocalOf { false }
 val LocalFloatingBarInset = staticCompositionLocalOf { 0.dp }
