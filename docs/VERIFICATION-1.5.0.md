@@ -38,7 +38,7 @@ Representative native dialog, ring and widget captures were inspected. Component
 
 The APK is **14,434,218 bytes**, SHA-256 `18a90c57b8e40244ec5bccd904d392f2f01a12489b4d4bd8f2a42686ff4869c0`. APK Signature Scheme v2 verification passed, with the original certificate SHA-256 `ed0e989eaa47ed777d32e9dcc9902f4462d349f5ad132bb8568971383b3ec9f0`. The package name and Apache 2.0 LICENSE/NOTICE are unchanged. The original Android testing signing identity is intentionally retained; see [signing guidance](SIGNING.md). No signing file or private credential is committed.
 
-The signed candidate installed over 1.4.0, launched successfully and passed the original-data comparison. The tested installed APK hash matches the staged artifact. Public-download verification will be recorded after publishing.
+The [1.5.0 release](https://github.com/jawad-mohammed35/hydri-android/releases/tag/v1.5.0) is public, stable (draft=false, prerelease=false) and latest. Its APK was downloaded without authentication and matched the tested artifact by SHA-256. The downloaded signature verified against the original certificate. Installation with update semantics succeeded, followed by a cold launch with Status: ok and the [original 1.4.0 data comparison](qa-1.5.0/downloaded-upgrade.txt). Both widget identities, dimensions and rendered content also [survived installation of the downloaded APK](qa-1.5.0/widget-update-verify.txt). All six earlier stable releases and their assets were verified as retained.
 
 ## Limits
 
