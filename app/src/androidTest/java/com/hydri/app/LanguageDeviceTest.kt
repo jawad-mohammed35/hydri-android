@@ -212,6 +212,9 @@ class LanguageDeviceTest {
             tap(tr(R.string.cancel))
             if (code != "en") rule.onNodeWithText("Quick add").assertDoesNotExist()
             tap(tr(R.string.custom_amount))
+            rule.onNodeWithTag("entry-name").assertTextContains(tr(R.string.custom_water))
+            rule.onNodeWithText(tr(R.string.entry_name)).assertExists()
+            rule.onNodeWithTag("entry-amount").assertIsFocused()
             rule
                 .onNode(hasText(tr(R.string.log_water)) and hasAnyAncestor(isDialog()))
                 .assertExists()

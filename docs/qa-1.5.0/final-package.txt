@@ -1,0 +1,7 @@
+com.hydri.app.HydriFlowTest:.....
+com.hydri.app.CustomLoggingDeviceTest:....
+com.hydri.app.UpgradeDeviceTest:.
+
+Time: 128.895
+
+OK (10 tests)

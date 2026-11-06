@@ -276,6 +276,8 @@ fun Symbol(
     }
 }
 
+val SuperchargeIntensity = SemanticsPropertyKey<Float>("SuperchargeIntensity")
+
 val GoalExceededBlend = SemanticsPropertyKey<Float>("GoalExceededBlend")
 
 @Composable
@@ -294,6 +296,13 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             tween(if (LocalReducedMotion.current) 0 else 400),
             label = "Exceeded goal appearance",
         )
+    val intensity by
+        animateFloatAsState(
+            com.hydri.app.domain.Supercharge.intensity(total, goal),
+            tween(if (LocalReducedMotion.current) 0 else 550),
+            label = "Supercharge intensity",
+        )
+    val energy = exceeded * .22f + intensity * .78f
     val energized =
         remember(primary) {
             val hsv = FloatArray(3)
@@ -302,13 +311,14 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
             hsv[2] = (hsv[2] * 1.12f).coerceAtMost(1f)
             Color(android.graphics.Color.HSVToColor(hsv))
         }
-    val ring = lerp(primary, energized, exceeded)
+    val ring = lerp(primary, energized, energy)
     val track = MaterialTheme.colorScheme.surfaceVariant
     Box(
         Modifier.fillMaxWidth().height(if (compact) 224.dp else 278.dp).semantics(
             mergeDescendants = true
         ) {
             this[GoalExceededBlend] = exceeded
+            this[SuperchargeIntensity] = intensity
             contentDescription =
                 tr(
                     R.string.value_of_value_value_percent,
@@ -328,7 +338,7 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
                     Brush.radialGradient(
                         0f to Color.Transparent,
                         .78f to Color.Transparent,
-                        .90f to energized.copy(alpha = .15f * exceeded),
+                        .90f to energized.copy(alpha = .32f * energy),
                         1f to Color.Transparent,
                         radius = size.minDimension / 2,
                     )
@@ -339,10 +349,10 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
                     if (exceeded == 0f) listOf(primary.copy(alpha = .35f), primary)
                     else
                         listOf(
-                            lerp(primary.copy(alpha = .35f), ring, exceeded),
+                            lerp(primary.copy(alpha = .35f), ring, energy),
                             lerp(
                                 lerp(primary.copy(alpha = .35f), primary, .5f),
-                                lerp(ring, Color.White, .28f),
+                                lerp(ring, Color.White, .18f + .35f * intensity),
                                 exceeded,
                             ),
                             ring,
@@ -355,6 +365,20 @@ fun WaterProgress(total: Long, goal: Long, unit: String, compact: Boolean = fals
                 Size(size.width - stroke, size.height - stroke),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = StrokeCap.Round),
             )
+            if (energy > 0f)
+                drawArc(
+                    ring.copy(alpha = .18f * energy),
+                    -90f,
+                    360f,
+                    false,
+                    Offset(inset, inset),
+                    Size(size.width - stroke, size.height - stroke),
+                    style =
+                        androidx.compose.ui.graphics.drawscope.Stroke(
+                            stroke * (1f + .7f * energy),
+                            cap = StrokeCap.Round,
+                        ),
+                )
             val r = size.width / 2 - 22.dp.toPx()
             drawCircle(
                 Brush.radialGradient(

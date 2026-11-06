@@ -57,7 +57,7 @@ class Repository(
                         volume,
                         timestamp,
                         date.toString(),
-                        name.take(60),
+                        if (bottle == null) CustomEntryName.normalize(name) else name.take(60),
                         now.zone.id,
                         bottle?.id,
                         bottle?.icon,
@@ -77,7 +77,7 @@ class Repository(
     }
 
     /** Read the persisted row inside the transaction; callers cannot spoof its original date. */
-    suspend fun updateEntry(id: String, volume: Long, timestamp: Long) =
+    suspend fun updateEntry(id: String, volume: Long, timestamp: Long, name: String? = null) =
         writes.withLock {
             db.withTransaction {
                 val entry = requireNotNull(dao.entry(id))
@@ -89,7 +89,16 @@ class Repository(
                         .toLocalDate()
                         .toString() == entry.date
                 )
-                dao.putEntry(entry.copy(volume = volume, timestamp = timestamp))
+                dao.putEntry(
+                    entry.copy(
+                        volume = volume,
+                        timestamp = timestamp,
+                        name =
+                            if (entry.bottleId == null && name != null)
+                                CustomEntryName.normalize(name)
+                            else entry.name,
+                    )
+                )
             }
         }
 
@@ -245,7 +254,7 @@ class Repository(
                         LocalDate.parse(j.getString("date"))
                             .also { require(it.year in 1970..2100 && it <= LocalDate.now()) }
                             .toString(),
-                        name(j),
+                        j.getString("name").also { require(it.isNotBlank()) },
                         ZoneId.of(j.getString("zone")).id,
                         if (j.isNull("bottleId")) null else idValue(j.getString("bottleId")),
                         if (j.isNull("bottleIcon")) null

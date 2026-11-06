@@ -6,14 +6,21 @@ package com.hydri.app.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.hydri.app.R
 import com.hydri.app.data.*
@@ -207,12 +214,19 @@ fun EntryDialog(
     onDismiss: () -> Unit,
     onDelete: (WaterEntry) -> Unit,
     today: LocalDate = LocalDate.now(),
-    onSave: (Long, LocalDate, Long) -> Unit,
+    onSave: (Long, LocalDate, Long, String) -> Unit,
 ) {
     val context = LocalContext.current
     val zone = entry?.zone?.let { ZoneId.of(it) } ?: ZoneId.systemDefault()
     val date = entry?.date?.let { LocalDate.parse(it) } ?: defaultDate
-    var amount by remember { mutableStateOf(Volume.input(entry?.volume ?: 250_000, s.unit)) }
+    var amount by remember { mutableStateOf(entry?.let { Volume.input(it.volume, s.unit) } ?: "") }
+    val custom = entry?.bottleId == null
+    val defaultName = tr(R.string.custom_water)
+    var name by remember { mutableStateOf(entry?.let(::entryDisplayName) ?: defaultName) }
+    val amountFocus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    DisposableEffect(Unit) { onDispose { keyboard?.hide() } }
     var dirty by remember { mutableStateOf(false) }
     val initialTime = remember {
         entry?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalTime() }
@@ -241,6 +255,7 @@ fun EntryDialog(
                 if (!dirty && entry != null) entry.volume else Volume.parse(amount, s.unit)!!,
                 date,
                 timestamp!!,
+                if (!custom) entry!!.name else CustomEntryName.stored(name, defaultName),
             )
         },
     ) {
@@ -256,7 +271,41 @@ fun EntryDialog(
                 dirty = true
             },
             s.unit,
+            modifier = Modifier.focusRequester(amountFocus).testTag("entry-amount"),
+            onDone = {
+                keyboard?.hide()
+                focusManager.clearFocus()
+            },
         )
+        val window = LocalWindowInfo.current
+        LaunchedEffect(window.isWindowFocused) {
+            if (entry == null && window.isWindowFocused) {
+                withFrameNanos {}
+                amountFocus.requestFocus()
+                keyboard?.show()
+            }
+        }
+        if (custom)
+            OutlinedTextField(
+                name,
+                { name = it },
+                label = { Text(tr(R.string.entry_name)) },
+                singleLine = true,
+                shape = RoundedCornerShape(18.dp),
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    ),
+                keyboardActions =
+                    androidx.compose.foundation.text.KeyboardActions(
+                        onDone = {
+                            keyboard?.hide()
+                            focusManager.clearFocus()
+                        }
+                    ),
+                modifier = Modifier.fillMaxWidth().testTag("entry-name"),
+            )
         OutlinedButton(
             onClick = { showTime = !showTime },
             modifier = Modifier.fillMaxWidth(),

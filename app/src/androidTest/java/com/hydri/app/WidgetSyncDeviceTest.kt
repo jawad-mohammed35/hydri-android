@@ -400,6 +400,91 @@ class WidgetSyncDeviceTest {
     }
 
     @Test
+    fun localizedAmountsFitBothWidgetsAtSmallWideAndTallSizes() =
+        runBlocking<Unit> {
+            androidx.test.core.app.ActivityScenario.launch(MainActivity::class.java).use {
+                val language = com.hydri.app.i18n.AppLocales.current(context)
+                try {
+                    repo.log(1_234_500, "QA localized widget")
+                    for ((index, code) in
+                        listOf("en", "es", "fr", "zh-Hans", "ko", "ja", "id").withIndex()) {
+                        instrumentation.runOnMainSync { com.hydri.app.i18n.AppLocales.select(code) }
+                        await("Locale not ready") {
+                            com.hydri.app.i18n.AppText.locale.language ==
+                                java.util.Locale.forLanguageTag(code).language
+                        }
+                        val unit = listOf("mL", "L", "oz")[index % 3]
+                        repo.preferences.save(repo.preferences.flow.first().copy(unit = unit))
+                        val total =
+                            repo.dao.entriesOn(LocalDate.now().toString()).first().sumOf {
+                                it.volume
+                            }
+                        val amount = Volume.format(total, unit)
+                        for (receiver in
+                            listOf(
+                                SmallWidgetReceiver::class.java,
+                                MediumWidgetReceiver::class.java,
+                            )) {
+                            val (id, view) = bind(receiver)
+                            try {
+                                for ((w, h) in
+                                    listOf(100 to 80, 100 to 340, 275 to 190, 180 to 340)) {
+                                    resize(view, id, w, h)
+                                    HydriWidgets.update(context)
+                                    await(
+                                        "Localized amount missing $code/${receiver.simpleName}/$w/$h"
+                                    ) {
+                                        text(view).contains(amount)
+                                    }
+                                    delay(400)
+                                    resize(view, id, w, h)
+                                    instrumentation.runOnMainSync {
+                                        val label =
+                                            textViews(view).first { it.text.toString() == amount }
+                                        val layout = label.layout
+                                        assertNotNull(layout)
+                                        textViews(view)
+                                            .filter {
+                                                it.visibility == View.VISIBLE && it.height > 0
+                                            }
+                                            .forEach { textView ->
+                                                val bounds =
+                                                    android.graphics.Rect(
+                                                        0,
+                                                        0,
+                                                        textView.width,
+                                                        textView.height,
+                                                    )
+                                                view.offsetDescendantRectToMyCoords(
+                                                    textView,
+                                                    bounds,
+                                                )
+                                                assertTrue(
+                                                    "Text below widget $code/$w/$h: ${textView.text}",
+                                                    bounds.bottom <=
+                                                        view.height - view.paddingBottom + 2,
+                                                )
+                                            }
+                                        assertTrue(
+                                            "Amount clipped $code/${receiver.simpleName}/$w/$h",
+                                            (0 until layout.lineCount).all {
+                                                layout.getEllipsisCount(it) == 0
+                                            },
+                                        )
+                                    }
+                                }
+                            } finally {
+                                host.deleteAppWidgetId(id)
+                            }
+                        }
+                    }
+                } finally {
+                    instrumentation.runOnMainSync { com.hydri.app.i18n.AppLocales.select(language) }
+                }
+            }
+        }
+
+    @Test
     fun responsiveSizesThemesAndAccentsRender() = runBlocking {
         for (receiver in
             listOf(SmallWidgetReceiver::class.java, MediumWidgetReceiver::class.java)) {
@@ -411,14 +496,30 @@ class WidgetSyncDeviceTest {
             val (id, view) = bind(receiver)
             try {
                 for ((width, height) in
-                    listOf(100 to 80, 160 to 120, 160 to 200, 240 to 110, 240 to 160, 320 to 220)) {
+                    listOf(
+                        100 to 80,
+                        100 to 340,
+                        160 to 120,
+                        160 to 200,
+                        180 to 340,
+                        240 to 110,
+                        240 to 160,
+                        275 to 190,
+                        320 to 220,
+                        360 to 360,
+                    )) {
                     resize(view, id, width, height)
                     HydriWidgets.update(context)
                     await("Missing content at ${width}x$height") { text(view).contains("HYDRI") }
-                    delay(750)
+                    delay(1200)
                     capture(view, "${receiver.simpleName}-${width}x$height")
                     val hasControls =
-                        (width >= 240 && height >= 160) || (width >= 150 && height >= 200)
+                        com.hydri.app.domain.WidgetLayout.forSize(
+                                width.toFloat(),
+                                height.toFloat(),
+                                receiver == MediumWidgetReceiver::class.java,
+                            )
+                            .buttonCount > 0
                     assertEquals(
                         "Quick-add controls at ${width}x$height",
                         hasControls,

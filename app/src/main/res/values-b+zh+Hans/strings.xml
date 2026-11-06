@@ -305,4 +305,5 @@
     <string name="insulated_flask">保温瓶</string>
     <string name="straw_tumbler">吸管杯</string>
     <string name="squeeze_bottle">挤压式水壶</string>
+    <string name="entry_name">名称</string>
 </resources>

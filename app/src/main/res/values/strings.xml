@@ -318,4 +318,5 @@
     <string name="insulated_flask">Insulated flask</string>
     <string name="straw_tumbler">Straw tumbler</string>
     <string name="squeeze_bottle">Squeeze bottle</string>
+    <string name="entry_name">Name</string>
 </resources>

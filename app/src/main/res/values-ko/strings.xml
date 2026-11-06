@@ -305,4 +305,5 @@
     <string name="insulated_flask">보온병</string>
     <string name="straw_tumbler">빨대 텀블러</string>
     <string name="squeeze_bottle">스퀴즈 물병</string>
+    <string name="entry_name">이름</string>
 </resources>

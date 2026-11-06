@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
@@ -50,6 +51,19 @@ fun GlassDialog(
         properties =
             DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
+        val dialogWindow = (LocalView.current.parent as DialogWindowProvider).window
+        DisposableEffect(dialogWindow) {
+            // Floating windows can still fit system bars on API 35 even with decorFits=false.
+            // Give Compose the full window so its IME padding uses the same coordinate space.
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(dialogWindow, false)
+            dialogWindow.setSoftInputMode(
+                android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            )
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                dialogWindow.attributes = dialogWindow.attributes.apply { setFitInsetsTypes(0) }
+            }
+            onDispose {}
+        }
         BoxWithConstraints(
             Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(18.dp),
             contentAlignment = Alignment.Center,

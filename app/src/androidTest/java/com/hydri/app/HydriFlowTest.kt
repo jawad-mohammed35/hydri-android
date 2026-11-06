@@ -367,8 +367,8 @@ class HydriFlowTest {
         text("Amount (mL)").performTextReplacement("375")
         rule.onNodeWithText("Time:", substring = true).clearFloatingNavigation(rule).performClick()
         val fields = rule.onAllNodes(hasSetTextAction())
-        fields[1].performTextReplacement("23")
-        fields[2].performTextReplacement("45")
+        fields[2].performTextReplacement("23")
+        fields[3].performTextReplacement("45")
         tap("Save entry")
         await { entries().any { it.name == "Custom water" && it.volume == 375_000L } }
         val saved = entries().first { it.name == "Custom water" && it.volume == 375_000L }
@@ -381,8 +381,8 @@ class HydriFlowTest {
         tap("Custom water")
         text("Amount (mL)").performTextReplacement("500")
         rule.onNodeWithText("Time:", substring = true).clearFloatingNavigation(rule).performClick()
-        rule.onAllNodes(hasSetTextAction())[1].performTextReplacement("0")
-        rule.onAllNodes(hasSetTextAction())[2].performTextReplacement("15")
+        rule.onAllNodes(hasSetTextAction())[2].performTextReplacement("0")
+        rule.onAllNodes(hasSetTextAction())[3].performTextReplacement("15")
         tap("Save entry")
         await { entries().any { it.id == saved.id && it.volume == 500_000L } }
         val edited = entries().first { it.id == saved.id }

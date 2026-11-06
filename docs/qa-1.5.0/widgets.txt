@@ -1,0 +1,5 @@
+com.hydri.app.WidgetSyncDeviceTest:.....
+
+Time: 83.358
+
+OK (5 tests)

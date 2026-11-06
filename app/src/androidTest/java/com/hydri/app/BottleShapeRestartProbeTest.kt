@@ -43,6 +43,7 @@ class BottleShapeRestartProbeTest {
                 baseline.writeText(repo.backup())
                 repo.dao.putBottle(bottle)
                 repo.log(bottle.volume, bottle.name, bottle = bottle)
+                repo.log(321_000, "QA custom restart 朝 💧")
                 rule.waitUntil(15000) {
                     rule
                         .onAllNodesWithContentDescription(routeLabel("Home"))
@@ -52,6 +53,10 @@ class BottleShapeRestartProbeTest {
             } else {
                 assertTrue("Capture the QA snapshot before the cold launch", baseline.exists())
                 try {
+                    assertEquals(
+                        321_000L,
+                        repo.dao.allEntries().single { it.name == "QA custom restart 朝 💧" }.volume,
+                    )
                     val saved = repo.dao.allBottles().single { it.id == bottle.id }
                     assertEquals(11, saved.icon)
                     assertEquals(3, saved.color)

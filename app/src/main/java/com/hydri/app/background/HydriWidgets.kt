@@ -16,6 +16,7 @@ import com.hydri.app.*
 import com.hydri.app.R
 import com.hydri.app.data.*
 import com.hydri.app.domain.Volume
+import com.hydri.app.domain.WidgetLayout
 import com.hydri.app.i18n.*
 import java.time.LocalDate
 import kotlinx.coroutines.*
@@ -56,9 +57,9 @@ class MediumWidgetReceiver : HydriWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = MediumHydriWidget()
 }
 
-class SmallHydriWidget : HydriWidget()
+class SmallHydriWidget : HydriWidget(quickAdd = false)
 
-class MediumHydriWidget : HydriWidget()
+class MediumHydriWidget : HydriWidget(quickAdd = true)
 
 data class WidgetSnapshot(
     val settings: Settings,
@@ -67,18 +68,9 @@ data class WidgetSnapshot(
     val bottles: List<Bottle>,
 )
 
-open class HydriWidget : GlanceAppWidget() {
-    override val sizeMode =
-        SizeMode.Responsive(
-            setOf(
-                DpSize(100.dp, 80.dp),
-                DpSize(160.dp, 120.dp),
-                DpSize(160.dp, 200.dp),
-                DpSize(240.dp, 110.dp),
-                DpSize(240.dp, 160.dp),
-                DpSize(320.dp, 220.dp),
-            )
-        )
+open class HydriWidget(private val quickAdd: Boolean = false) : GlanceAppWidget() {
+    // Render each actual launcher-provided size, including pre-Android 12 min/max sizes.
+    override val sizeMode = SizeMode.Exact
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -114,22 +106,28 @@ open class HydriWidget : GlanceAppWidget() {
             // snapshot.
             val snapshot by data.collectAsState(initial)
             val revision by HydriWidgets.revision.collectAsState()
-            key(revision) { WidgetContent(context, snapshot) }
+            key(revision) { WidgetContent(context, snapshot, quickAdd) }
         }
     }
 }
 
 @Composable
-private fun WidgetContent(context: Context, state: WidgetSnapshot) {
+private fun WidgetContent(context: Context, state: WidgetSnapshot, quickAdd: Boolean) {
     val size = LocalSize.current
     val colors = widgetColors(context, state.settings)
-    val compact = size.width < 150.dp || size.height < 100.dp
-    val roomy = size.width >= 240.dp && size.height >= 160.dp
-    val controls =
-        (size.width >= 240.dp && size.height >= 160.dp) ||
-            (size.width >= 150.dp && size.height >= 200.dp)
+    val layout = WidgetLayout.forSize(size.width.value, size.height.value, quickAdd)
+    val compact = layout.compact
+    val roomy = layout.ring
+    val controls = layout.buttonCount > 0
     val percent = (state.total.toDouble() / state.goal * 100).toInt()
     val padding = if (compact) 8.dp else 12.dp
+    val amountText = Volume.format(state.total, state.settings.unit)
+    val amountWidth =
+        size.width.value -
+            2 * padding.value -
+            if (roomy && !layout.verticalRing) layout.ringSize + 12 else 0f
+    val amountFont =
+        fittingAmountFont(context, amountText, amountWidth, if (compact) 16f else 23f).sp
     val background = colors.surface
     val ink = colors.onSurface
     val muted = colors.onSurfaceVariant
@@ -146,62 +144,64 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
-        Row(
-            GlanceModifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Vertical.CenterVertically,
-        ) {
-            Text(
-                "HYDRI",
-                modifier = GlanceModifier.defaultWeight(),
-                style = TextStyle(color = accent, fontSize = 11.sp, fontWeight = FontWeight.Bold),
-                maxLines = 1,
-            )
-            if (roomy)
-                Text(
-                    percentText(percent),
-                    style =
-                        TextStyle(color = accent, fontSize = 14.sp, fontWeight = FontWeight.Bold),
-                    maxLines = 1,
-                )
-        }
-        Spacer(GlanceModifier.height(if (compact) 3.dp else 7.dp))
-        if (roomy) {
+        // At the minimum launcher height, larger fonts need the space for intake and progress.
+        if (size.height >= 100.dp || context.resources.configuration.fontScale <= 1.1f) {
             Row(
                 GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Vertical.CenterVertically,
             ) {
-                Box(GlanceModifier.size(if (size.height >= 210.dp) 64.dp else 52.dp)) {
-                    Image(
-                        ImageProvider(
-                            WidgetProgress.ring(
-                                0f,
-                                android.graphics.Color.TRANSPARENT,
-                                android.graphics.Color.WHITE,
-                            )
-                        ),
-                        null,
-                        modifier = GlanceModifier.fillMaxSize(),
-                        colorFilter = ColorFilter.tint(colors.surfaceVariant),
+                Text(
+                    "HYDRI",
+                    modifier = GlanceModifier.defaultWeight(),
+                    style =
+                        TextStyle(color = accent, fontSize = 11.sp, fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                )
+                if (roomy)
+                    Text(
+                        percentText(percent),
+                        style =
+                            TextStyle(
+                                color = accent,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        maxLines = 1,
                     )
-                    Image(
-                        ImageProvider(
-                            WidgetProgress.ring(
-                                fraction,
-                                android.graphics.Color.WHITE,
-                                android.graphics.Color.TRANSPARENT,
-                            )
-                        ),
-                        tr(R.string.value_percent_of_daily_goal, percent),
-                        modifier = GlanceModifier.fillMaxSize(),
-                        colorFilter = ColorFilter.tint(accent),
-                    )
-                }
+            }
+            Spacer(GlanceModifier.height(if (compact) 3.dp else 7.dp))
+        }
+        if (layout.verticalRing) {
+            Box(GlanceModifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                WidgetRing(fraction, percent, colors, layout.ringSize.dp)
+            }
+            Spacer(GlanceModifier.height(8.dp))
+            Text(
+                amountText,
+                style = TextStyle(color = ink, fontSize = amountFont, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+            )
+            Text(
+                tr(R.string.of_value, Volume.format(state.goal, state.settings.unit)),
+                style = TextStyle(color = muted, fontSize = 12.sp),
+                maxLines = 2,
+            )
+        } else if (roomy) {
+            Row(
+                GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Vertical.CenterVertically,
+            ) {
+                WidgetRing(fraction, percent, colors, layout.ringSize.dp)
                 Spacer(GlanceModifier.width(12.dp))
                 Column(GlanceModifier.defaultWeight()) {
                     Text(
-                        Volume.format(state.total, state.settings.unit),
+                        amountText,
                         style =
-                            TextStyle(color = ink, fontSize = 22.sp, fontWeight = FontWeight.Bold),
+                            TextStyle(
+                                color = ink,
+                                fontSize = amountFont,
+                                fontWeight = FontWeight.Bold,
+                            ),
                         maxLines = 1,
                     )
                     Text(
@@ -225,13 +225,8 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
             }
         } else {
             Text(
-                Volume.format(state.total, state.settings.unit),
-                style =
-                    TextStyle(
-                        color = ink,
-                        fontSize = if (compact) 16.sp else 23.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+                amountText,
+                style = TextStyle(color = ink, fontSize = amountFont, fontWeight = FontWeight.Bold),
                 maxLines = 1,
             )
             Spacer(GlanceModifier.height(4.dp))
@@ -256,7 +251,7 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
         }
         if (controls) {
             Spacer(GlanceModifier.height(8.dp))
-            val favorites = state.bottles.take(if (size.width >= 240.dp) 2 else 1)
+            val favorites = state.bottles.take(layout.buttonCount)
             if (favorites.isEmpty())
                 Text(
                     tr(R.string.favorite_a_bottle_in_hydri),
@@ -264,54 +259,113 @@ private fun WidgetContent(context: Context, state: WidgetSnapshot) {
                     maxLines = 1,
                 )
             else
-                Row(
-                    GlanceModifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
-                ) {
-                    favorites.forEachIndexed { index, bottle ->
-                        if (index > 0) Spacer(GlanceModifier.width(8.dp))
-                        Box(
-                            GlanceModifier.defaultWeight()
-                                .height(44.dp)
-                                .background(
-                                    ImageProvider(R.drawable.widget_surface),
-                                    colorFilter = ColorFilter.tint(colors.primaryContainer),
-                                )
-                                .clickable(
-                                    actionRunCallback<WidgetAdd>(
-                                        actionParametersOf(
-                                            ActionParameters.Key<String>("bottle") to bottle.id
+                Column(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                    favorites.chunked(layout.columns).forEachIndexed { rowIndex, row ->
+                        if (rowIndex > 0) Spacer(GlanceModifier.height(8.dp))
+                        Row(GlanceModifier.fillMaxWidth()) {
+                            row.forEachIndexed { index, bottle ->
+                                if (index > 0) Spacer(GlanceModifier.width(8.dp))
+                                Box(
+                                    GlanceModifier.defaultWeight()
+                                        .height(48.dp)
+                                        .background(
+                                            ImageProvider(R.drawable.widget_surface),
+                                            colorFilter = ColorFilter.tint(colors.primaryContainer),
                                         )
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.Horizontal.CenterHorizontally) {
-                                if (size.width >= 320.dp)
-                                    Text(
-                                        bottleDisplayName(bottle),
-                                        style =
-                                            TextStyle(
-                                                color = colors.onPrimaryContainer,
-                                                fontSize = 11.sp,
-                                            ),
-                                        maxLines = 1,
-                                    )
-                                Text(
-                                    "+ ${Volume.format(bottle.volume,state.settings.unit)}",
-                                    style =
-                                        TextStyle(
-                                            color = colors.onPrimaryContainer,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
+                                        .clickable(
+                                            actionRunCallback<WidgetAdd>(
+                                                actionParametersOf(
+                                                    ActionParameters.Key<String>("bottle") to
+                                                        bottle.id
+                                                )
+                                            )
                                         ),
-                                    maxLines = 1,
-                                )
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Column(
+                                        horizontalAlignment =
+                                            Alignment.Horizontal.CenterHorizontally
+                                    ) {
+                                        if (size.width / layout.columns >= 145.dp)
+                                            Text(
+                                                bottleDisplayName(bottle),
+                                                style =
+                                                    TextStyle(
+                                                        color = colors.onPrimaryContainer,
+                                                        fontSize = 11.sp,
+                                                    ),
+                                                maxLines = 1,
+                                            )
+                                        Text(
+                                            "+ ${Volume.format(bottle.volume, state.settings.unit)}",
+                                            style =
+                                                TextStyle(
+                                                    color = colors.onPrimaryContainer,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                ),
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
         }
+    }
+}
+
+/** Keep the amount readable without scaling the entire RemoteViews layout. */
+private fun fittingAmountFont(
+    context: Context,
+    text: String,
+    availableDp: Float,
+    maximum: Float,
+): Float {
+    val metrics = context.resources.displayMetrics
+    val paint = android.graphics.Paint().apply { typeface = android.graphics.Typeface.DEFAULT_BOLD }
+    var font = maximum
+    while (font > 12f) {
+        paint.textSize =
+            android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_SP,
+                font,
+                metrics,
+            )
+        if (paint.measureText(text) <= availableDp.coerceAtLeast(1f) * metrics.density) break
+        font -= 1f
+    }
+    return font
+}
+
+@Composable
+private fun WidgetRing(fraction: Float, percent: Int, colors: WidgetColors, diameter: Dp) {
+    Box(GlanceModifier.size(diameter)) {
+        Image(
+            ImageProvider(
+                WidgetProgress.ring(
+                    0f,
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.WHITE,
+                )
+            ),
+            null,
+            modifier = GlanceModifier.fillMaxSize(),
+            colorFilter = ColorFilter.tint(colors.surfaceVariant),
+        )
+        Image(
+            ImageProvider(
+                WidgetProgress.ring(
+                    fraction,
+                    android.graphics.Color.WHITE,
+                    android.graphics.Color.TRANSPARENT,
+                )
+            ),
+            tr(R.string.value_percent_of_daily_goal, percent),
+            modifier = GlanceModifier.fillMaxSize(),
+            colorFilter = ColorFilter.tint(colors.primary),
+        )
     }
 }
 

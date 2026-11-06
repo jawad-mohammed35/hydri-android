@@ -98,6 +98,13 @@ class BottleShapeUiDeviceTest {
             val sip = runBlocking { repo.dao.allEntries().first { it.bottleId == bottle.id } }
             assertEquals(id, sip.bottleIcon)
             assertEquals(bottle.color, sip.bottleColor)
+            // Room has committed before the ViewModel's combined UI snapshot is delivered.
+            rule.waitUntil(15000) {
+                rule
+                    .onAllNodesWithContentDescription(tr(R.string.value_sip, label))
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+            }
             rule
                 .onNodeWithContentDescription(tr(R.string.value_sip, label))
                 .performScrollTo()

@@ -315,4 +315,5 @@
     <string name="insulated_flask">Bouteille isotherme</string>
     <string name="straw_tumbler">Gobelet avec paille</string>
     <string name="squeeze_bottle">Gourde souple</string>
+    <string name="entry_name">Nom</string>
 </resources>

@@ -318,10 +318,10 @@ fun HydriApp(
                         entryOpen = false
                     },
                     today = state.today,
-                ) { volume, date, time ->
+                ) { volume, date, time, name ->
                     val editing = entryEditor
-                    if (editing == null) vm.log(volume, "Custom water", date, time)
-                    else vm.action { vm.repo.updateEntry(editing.id, volume, time) }
+                    if (editing == null) vm.log(volume, name, date, time)
+                    else vm.action { vm.repo.updateEntry(editing.id, volume, time, name) }
                     entryOpen = false
                 }
             if (goalOpen)
@@ -615,7 +615,13 @@ fun SelectionCard(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
+fun VolumeField(
+    text: String,
+    onChange: (String) -> Unit,
+    unit: String,
+    modifier: Modifier = Modifier,
+    onDone: (() -> Unit)? = null,
+) {
     OutlinedTextField(
         text,
         onChange,
@@ -629,9 +635,17 @@ fun VolumeField(text: String, onChange: (String) -> Unit, unit: String) {
         },
         keyboardOptions =
             androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                keyboardType =
+                    if (unit == "mL") androidx.compose.ui.text.input.KeyboardType.Number
+                    else androidx.compose.ui.text.input.KeyboardType.Decimal,
+                imeAction =
+                    if (onDone != null) androidx.compose.ui.text.input.ImeAction.Done
+                    else androidx.compose.ui.text.input.ImeAction.Default,
             ),
-        modifier = Modifier.fillMaxWidth(),
+        keyboardActions =
+            if (onDone == null) androidx.compose.foundation.text.KeyboardActions.Default
+            else androidx.compose.foundation.text.KeyboardActions(onDone = { onDone() }),
+        modifier = modifier.fillMaxWidth(),
     )
 }
 

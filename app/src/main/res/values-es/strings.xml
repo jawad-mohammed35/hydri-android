@@ -315,4 +315,5 @@
     <string name="insulated_flask">Termo</string>
     <string name="straw_tumbler">Vaso con pajita</string>
     <string name="squeeze_bottle">Botella deportiva flexible</string>
+    <string name="entry_name">Nombre</string>
 </resources>

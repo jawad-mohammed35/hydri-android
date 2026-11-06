@@ -305,4 +305,5 @@
     <string name="insulated_flask">保温ボトル</string>
     <string name="straw_tumbler">ストロータンブラー</string>
     <string name="squeeze_bottle">スクイズボトル</string>
+    <string name="entry_name">名前</string>
 </resources>

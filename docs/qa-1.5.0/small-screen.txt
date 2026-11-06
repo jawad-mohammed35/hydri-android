@@ -1,0 +1,6 @@
+com.hydri.app.CustomLoggingDeviceTest:....
+com.hydri.app.WidgetSyncDeviceTest:.
+
+Time: 69.975
+
+OK (5 tests)
